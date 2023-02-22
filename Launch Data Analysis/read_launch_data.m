@@ -200,10 +200,10 @@ hold off;
 % Plot horizontal distance traveled
 subplot(3, 3, 5);
 hold on;
-plot(t_data, horiz_dist);
-plot(t_data, fhoriz_dist);
+plot(dx_i, dy_i);
+plot(fdx_i, fdy_i);
 legend('unsmoothed', 'smoothed');
-title('Distance from Launchpad');
+title('Horizontal Position');
 hold off;
 
 % Plot inclination
