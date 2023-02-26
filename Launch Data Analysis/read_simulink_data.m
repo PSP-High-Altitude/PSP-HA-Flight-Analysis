@@ -1,6 +1,9 @@
 % Reads acceleration and rotation data from a file, then plots the rocket's
 % trajectory, position, and other values
-clc; clear all;
+clc; clear all; close all;
+
+% Simulation Data:
+% 
 
 %% Import
 
@@ -14,14 +17,17 @@ options = odeset('RelTol',1E-12,'AbsTol',1e-12);
 % useful_data = 180240:180240+933; % ideally start to just b4 parachute
 
 movmean_val = 31;
-sim_data = importdata("Simulink_data2.mat");
-imu_data = sim_data{9}.Values;
+rot_init = [0, 85, 0];
+sim_data = importdata("simFlight5.mat");
+imu_data = sim_data{12}.Values;
 accel_data = permute(imu_data.IMU_accel_body.data, [2 3 1])';
 t_data = imu_data.IMU_accel_body.time;
 ang_vel_data = permute(imu_data.IMU_rot_body.data, [2 3 1])';
 
-actual_accel_times = sim_data{2}.Values.time;
-actual_accel_vals = permute(sim_data{2}.Values.data, [3 1 2]);
+% Get actual position
+real_pos_N = (sim_data{7}.Values.signal1.data);
+real_pos_E = (sim_data{7}.Values.signal2.data);
+real_pos_D = (sim_data{7}.Values.signal3.data);
 
 % Import acceleration data
 Ax_in = accel_data(:,1);
@@ -29,13 +35,13 @@ Ay_in = accel_data(:,2);
 Az_in = accel_data(:,3);
 
 % Convert acceleration data into a nx3 matrix, and get magnitude
-A = [Ax_in * 9.81, Ay_in * 9.81, Az_in * 9.81];
+A = [Ax_in * 9.81, Ay_in * 9.81, Az_in * 9.81] / 9.81;
 A_mag = (A(:,1) .^ 2 + A(:,2) .^ 2 + A(:,3) .^ 2) .^ .5;
 
 % Import angular velocity AND CONVERT TO RADIANS
-Rx = ang_vel_data(:,1);
-Ry = ang_vel_data(:,1);
-Rz = ang_vel_data(:,1);
+Rx = deg2rad(ang_vel_data(:,1));
+Ry = deg2rad(ang_vel_data(:,1));
+Rz = deg2rad(ang_vel_data(:,1));
 
 disp("Finished Importing");
 
@@ -48,7 +54,7 @@ w_data = [Rx, Ry, Rz];
 
 % Run vector rotation correction using the input vectors, angular
 % velocities, time data, and base rotation [yaw, pitch, roll]
-[a_i, BN_out, EP_hist] = vecRotCorrect(A, w_data, t_data, [0, 90, 0]);
+[a_i, BN_out, EP_hist] = vecRotCorrect(A, w_data, t_data, rot_init);
 
 % Add gravity to the z direction
 a_i(:,3) = a_i(:,3) + 9.81;
@@ -90,7 +96,7 @@ w_data_smoothed = [Rxx, Ryy, Rzz];
 
 % Run vector rotation correction using the input vectors, angular
 % velocities, time data, and base rotation [yaw, pitch, roll]
-[fa_i, fBN_out, fEP_hist] = vecRotCorrect(A, w_data_smoothed, t_data, [0, 90, 0]);
+[fa_i, fBN_out, fEP_hist] = vecRotCorrect(A, w_data_smoothed, t_data, rot_init);
 
 % Add gravity to the z direction
 fa_i(:,3) = fa_i(:,3) + 9.81;
@@ -116,49 +122,11 @@ fhoriz_dist = (fdx_i .^ 2 + fdy_i .^ 2) .^ 0.5;
 % Calculate inclination
 finclination = atan(sqrt(tan(froll) .^ 2 + tan(fpitch) .^ 2));
 
-disp("Finished smoothed Processing");
-
-%% Angvel Plotting
-
-fig_ct = 1;
-
-figure(fig_ct);
-fig_ct = fig_ct + 1;
-clf;
-plot(t_data(200:2000), ang_vel_data(200:2000,:));
-legend('x', 'y', 'z');
-
-%% Predicted vs Actual Pos Plotting
-
-aax_i = actual_accel_vals(:,1);
-aay_i = actual_accel_vals(:,2);
-aaz_i = actual_accel_vals(:,3);
-
-avx_i = cumtrapz(actual_accel_times, aax_i);
-avy_i = cumtrapz(actual_accel_times, aay_i);
-avz_i = cumtrapz(actual_accel_times, aaz_i);
-
-adx_i = cumtrapz(actual_accel_times, avx_i);
-ady_i = cumtrapz(actual_accel_times, avy_i);
-adz_i = cumtrapz(actual_accel_times, avz_i);
-
-figure(fig_ct);
-fig_ct = fig_ct + 1;
-clf;
-plot3(adx_i, ady_i, adz_i);
-hold on;
-% plot3(dx_i, dy_i, -dz_i);
-% plot3(fdx_i, fdy_i, -fdz_i);
-legend('actual', 'unsmoothed', 'smoothed');
-hold off;
-
-figure(fig_ct);
-fig_ct = fig_ct + 1;
-clf;
-ad_i = [adx_i, ady_i, adz_i]
-plot(actual_accel_times, ad_i);
+disp("Finished Smoothed Processing");
 
 %% Plotting
+
+fig_ct = 1;
 
 % Plot rocket position in 3D
 figure(fig_ct);
@@ -167,7 +135,7 @@ clf;
 plot3(dx_i, dy_i, -dz_i);
 hold on;
 grid on;
-% plot3(fdx_i, fdy_i, -fdz_i);
+plot3(fdx_i, fdy_i, -fdz_i);
 % legend('unsmoothed', 'smoothed');
 axis equal;
 xlabel('X (m)');
@@ -181,7 +149,7 @@ clf;
 plot3(dx_i, dy_i, -dz_i);
 hold on;
 grid on;
-plot3(fdx_i, fdy_i, -fdz_i);
+plot3(real_pos_N, real_pos_N, -real_pos_D);
 legend('unsmoothed', 'smoothed');
 axis equal;
 xlabel('X (m)');
@@ -290,9 +258,6 @@ fprintf("Maximum altitude: %.2f m (smoothed: %.2f m)\n", max(-dz_i), max(-fdz_i)
 fprintf("Maximum distance from launchpad: %.2f m (smoothed: %.2f m)\n", max(horiz_dist), max(fhoriz_dist));
 fprintf("Maximum inclination: %.2f deg (smoothed: %.2f deg)\n", max(90 - rad2deg(inclination)), max(90 - rad2deg(finclination)));
 fprintf("-=-=-=-\n");
-
-fig_ct;
-clear fig_ct;
 
 %% Old stuff
 
