@@ -35,6 +35,6 @@ for i = 1:(numel(timestamp)-2)
 end
 
 
-Velocity = [Velocity_x Velocity_y Velocity_z];
+Velocity = [transpose(Velocity_x), transpose(Velocity_y), transpose(Velocity_z)];
 
-Position = [Position_x Position_y Position_z];
+Position = [transpose(Position_x), transpose(Position_y), transpose(Position_z)];
