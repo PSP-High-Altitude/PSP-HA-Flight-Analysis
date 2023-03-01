@@ -1,9 +1,8 @@
 % Reads acceleration and rotation data from a file, then plots the rocket's
-% trajectory, position, and other values
+% trajectory, position, and other values; it takes in IMU acceleration in
+% gees and angular velocity in degrees per second, both relative to the
+% body of the rocket, and outputs and plots flight data
 clc; clear all; close all;
-
-% Simulation Data:
-% 
 
 %% Import
 
@@ -17,10 +16,16 @@ options = odeset('RelTol',1E-12,'AbsTol',1e-12);
 % useful_data = 180240:180240+933; % ideally start to just b4 parachute
 
 movmean_val = 31;
-rot_init = [0, 85, 0];
-sim_data = importdata("simFlight5.mat");
+g = 9.81; % force of gravity
+rot_init = [180, 70, 0]; % [Yaw, Pitch, Roll] -> relative to 0,0,0
+vel_init_body = [30; 0; 0]; % Initial velocity, in m/s, IN NED
+DCM0 = eulerANGLEStoDCM([3,2,1], deg2rad(rot_init));
+vel_init = DCM0.'*vel_init_body;
+
+sim_data = importdata("simFlight8_70.mat");
 imu_data = sim_data{12}.Values;
-accel_data = permute(imu_data.IMU_accel_body.data, [2 3 1])';
+A = permute(imu_data.IMU_accel_body.data, [2 3 1])';
+A = A * 9.81;
 t_data = imu_data.IMU_accel_body.time;
 ang_vel_data = permute(imu_data.IMU_rot_body.data, [2 3 1])';
 
@@ -30,18 +35,14 @@ real_pos_E = (sim_data{7}.Values.signal2.data);
 real_pos_D = (sim_data{7}.Values.signal3.data);
 
 % Import acceleration data
-Ax_in = accel_data(:,1);
-Ay_in = accel_data(:,2);
-Az_in = accel_data(:,3);
-
-% Convert acceleration data into a nx3 matrix, and get magnitude
-A = [Ax_in * 9.81, Ay_in * 9.81, Az_in * 9.81] / 9.81;
-A_mag = (A(:,1) .^ 2 + A(:,2) .^ 2 + A(:,3) .^ 2) .^ .5;
+Ax_in = A(:,1);
+Ay_in = A(:,2);
+Az_in = A(:,3);
 
 % Import angular velocity AND CONVERT TO RADIANS
 Rx = deg2rad(ang_vel_data(:,1));
-Ry = deg2rad(ang_vel_data(:,1));
-Rz = deg2rad(ang_vel_data(:,1));
+Ry = deg2rad(ang_vel_data(:,2));
+Rz = deg2rad(ang_vel_data(:,3));
 
 disp("Finished Importing");
 
@@ -54,6 +55,7 @@ w_data = [Rx, Ry, Rz];
 
 % Run vector rotation correction using the input vectors, angular
 % velocities, time data, and base rotation [yaw, pitch, roll]
+
 [a_i, BN_out, EP_hist] = vecRotCorrect(A, w_data, t_data, rot_init);
 
 % Add gravity to the z direction
@@ -65,9 +67,9 @@ roll = permute(real(atan2(BN_out(2,3,:), BN_out(3,3,:))), [3, 1, 2])';
 yaw = permute(real(atan2(BN_out(1,2,:), BN_out(1,1,:))), [3, 1, 2])';
 
 % Use trapezoidal Riemann sums to calculate velocity from acceleration
-vx_i = cumtrapz(t_data, a_i(:,1));
-vy_i = cumtrapz(t_data, a_i(:,2));
-vz_i = cumtrapz(t_data, a_i(:,3));
+vx_i = cumtrapz(t_data, a_i(:,1)) + vel_init(1);
+vy_i = cumtrapz(t_data, a_i(:,2)) + vel_init(2);
+vz_i = cumtrapz(t_data, a_i(:,3)) + vel_init(3);
 
 % Use trapezoidal Riemann sums to calulate position from velocity
 dx_i = cumtrapz(t_data, vx_i);
@@ -107,9 +109,9 @@ froll = permute(real(atan2(fBN_out(2,3,:), fBN_out(3,3,:))), [3, 1, 2])';
 fyaw = permute(real(atan2(fBN_out(1,2,:), fBN_out(1,1,:))), [3, 1, 2])';
 
 % Use trapezoidal Riemann sums to calculate velocity from acceleration
-fvx_i = cumtrapz(t_data, fa_i(:,1));
-fvy_i = cumtrapz(t_data, fa_i(:,2));
-fvz_i = cumtrapz(t_data, fa_i(:,3));
+fvx_i = cumtrapz(t_data, fa_i(:,1)) + vel_init(1);
+fvy_i = cumtrapz(t_data, fa_i(:,2)) + vel_init(2);
+fvz_i = cumtrapz(t_data, fa_i(:,3)) + vel_init(3);
 
 % Use trapezoidal Riemann sums to calulate position from velocity
 fdx_i = cumtrapz(t_data, fvx_i);
@@ -150,7 +152,7 @@ plot3(dx_i, dy_i, -dz_i);
 hold on;
 grid on;
 plot3(real_pos_N, real_pos_N, -real_pos_D);
-legend('unsmoothed', 'smoothed');
+legend('calculated', 'actual');
 axis equal;
 xlabel('X (m)');
 ylabel('Y (m)');

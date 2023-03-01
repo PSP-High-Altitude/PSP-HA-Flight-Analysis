@@ -122,7 +122,7 @@ fhoriz_dist = (fdx_i .^ 2 + fdy_i .^ 2) .^ 0.5;
 % Calculate inclination
 finclination = atan(sqrt(tan(froll) .^ 2 + tan(fpitch) .^ 2));
 
-disp("Finished smoothed Processing");
+disp("Finished Smoothed Processing");
 
 %% Processing/Plotting
 
