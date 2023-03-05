@@ -8,38 +8,37 @@ clc; clear all; close all;
 
 disp("Starting Importing");
 
+sim_data = importdata("simFlight8_70.mat"); % Sim data file name in quotes
+
 options = odeset('RelTol',1E-12,'AbsTol',1e-12);
 
-% useful_data = 180265+offset:181258; % short and pretty good
-% useful_data = 180240:188471; % long and not good
-% useful_data = 180240:183471; % a little longer and might be good
-% useful_data = 180240:180240+933; % ideally start to just b4 parachute
-
-movmean_val = 31;
+movmean_val = 31; % width of moving mean for basic data smoothing
 g = 9.81; % force of gravity
-rot_init = [180, 70, 0]; % [Yaw, Pitch, Roll] -> relative to 0,0,0
+rot_init = [45, 70, 0]; % [Yaw, Pitch, Roll] -> relative to 0,0,0
 vel_init_body = [30; 0; 0]; % Initial velocity, in m/s, IN NED
+
+% Imports IMU data from sim (this may need editing depending on the file)
+imu_data = sim_data{12}.Values; 
+
+% Get actual position from sim data 
+% (this may need editing depending on the file)
+real_pos_N = (sim_data{7}.Values.signal1.data);
+real_pos_E = (sim_data{7}.Values.signal2.data);
+real_pos_D = (sim_data{7}.Values.signal3.data);
+
 DCM0 = eulerANGLEStoDCM([3,2,1], deg2rad(rot_init));
 vel_init = DCM0.'*vel_init_body;
-
-sim_data = importdata("simFlight8_70.mat");
-imu_data = sim_data{12}.Values;
 A = permute(imu_data.IMU_accel_body.data, [2 3 1])';
 A = A * 9.81;
 t_data = imu_data.IMU_accel_body.time;
 ang_vel_data = permute(imu_data.IMU_rot_body.data, [2 3 1])';
 
-% Get actual position
-real_pos_N = (sim_data{7}.Values.signal1.data);
-real_pos_E = (sim_data{7}.Values.signal2.data);
-real_pos_D = (sim_data{7}.Values.signal3.data);
-
-% Import acceleration data
+% Split IMU acceleration data
 Ax_in = A(:,1);
 Ay_in = A(:,2);
 Az_in = A(:,3);
 
-% Import angular velocity AND CONVERT TO RADIANS
+% Get angular velocity AND CONVERT TO RADIANS
 Rx = deg2rad(ang_vel_data(:,1));
 Ry = deg2rad(ang_vel_data(:,2));
 Rz = deg2rad(ang_vel_data(:,3));
