@@ -8,7 +8,7 @@ clc; clear all; close all;
 
 disp("Starting Importing");
 
-sim_data = importdata("simFlight8_70.mat"); % Sim data file name in quotes
+sim_data = importdata("simFlight6_g.mat"); % Sim data file name in quotes
 
 options = odeset('RelTol',1E-12,'AbsTol',1e-12);
 
