@@ -1,5 +1,12 @@
 clear
 
+make_functions = input("Generate new functions? (y/n)\n> ", 's');
+if (make_functions == 'y')
+    make_functions = true;
+else
+    make_functions = false;
+end
+
 % States
 syms x y z Vx Vy Vz q1 q2 q3 q4 Vx_prev Vy_prev Vz_prev q1_prev  q2_prev  q3_prev  q4_prev 
 
@@ -9,16 +16,15 @@ syms axb ayb azb w1 w2 w3 dt baro GPS
 state = [x y z Vx Vy Vz q1 q2 q3 q4].';
 
 %% G functions 
-% Barometer
+%% Barometer
 G_baro = -z;
-
 H_baro = jacobian(G_baro,state);
 
-% GPS
+%% GPS
 G_GPS = [x y -z Vx Vy -Vz].';
 H_GPS = jacobian(G_GPS,state);
 
-% Acceleration
+%% Acceleration
 axN = (Vx-Vx_prev)/dt;
 axE = (Vy-Vy_prev)/dt;
 axD = (Vz-Vz_prev)/dt;
@@ -32,7 +38,7 @@ BN = [1-2*q2^2-2*q3^2, 2*(q1*q2+q3*q4), 2*(q1*q3-q2*q4);
 G_accIMU = BN*a_NED;
 H_accIMU = jacobian(G_accIMU,state);
 
-% Gryo
+%% Gryo
 qdot1 = (q1-q1_prev)/dt;
 qdot2 = (q2-q2_prev)/dt;
 qdot3 = (q3-q3_prev)/dt;
@@ -47,3 +53,23 @@ q_matrix = [q4,    q3,    -q2,   -q1;
 w_vec = 2*q_matrix*qdot;
 G_angIMU = w_vec(1:3);
 H_angIMU  = jacobian(G_angIMU,state);
+
+%% Matlab Functions
+
+if make_functions
+    % Barometer
+    matlabFunction(G_baro,"File",'G_baro');
+    matlabFunction(H_baro,"File",'H_baro');
+    
+    % GPS
+    matlabFunction(G_GPS,"File",'G_GPS');
+    matlabFunction(H_GPS,"File",'H_GPS');
+    
+    % Accelerometer
+    matlabFunction(G_accIMU,"File",'G_accIMU');
+    matlabFunction(H_accIMU,"File",'H_accIMU');
+    
+    % Gyro
+    matlabFunction(G_angIMU,"File",'G_angIMU');
+    matlabFunction(H_angIMU,"File",'H_angIMU');
+end
