@@ -17,35 +17,38 @@ EXTRA_RANGE_S = 10
 STATIONARY_TOLERANCE_G = 0.1
 
 
-def detect_launch(acc_g: pd.Series) -> int:
+def detect_launch(acc_g: np.ndarray) -> int:
     """Detect a launch event in the given acceleration time series.
 
     parameters:
-        acc_g - the magnitude of the acceleration experienced (in g)
+        acc_g - array of the magnitude of the acceleration experienced (in g)
 
     returns:
         Integer that is the index of the start of a sustained acceleration
         greater than LAUNCH_THRESHOLD_G for a period of at least
         LAUNCH_BOOST_PERIOD_S
     """
-    threshold_exceeded = acc_g > LAUNCH_THRESHOLD_G
-    threshold_run_length = 1000*LAUNCH_BOOST_PERIOD_S//DAT_INTERVAL_MS
+    # Find the indices in the original array that are above the threshold
+    above_threshold_indices = np.nonzero(acc_g > LAUNCH_THRESHOLD_G)[0]
 
-    run_length = 0
-    run_start_idx = 0
-    for i, exceeded in enumerate(threshold_exceeded):
-        if exceeded:
-            if run_length == 0:
-                run_start_idx = i
-            run_length += 1
-        else:
-            run_length = 0
-        if run_length > threshold_run_length:
-            break
-    else:  # Did not find a run of sufficient length
-        raise ValueError("Unable to detect launch with given parameters")
+    # Find the difference of each element from the previous one, so that values
+    # of 1 indicate that a run is ongoing and larger values indicate that a new
+    # run is about to start
+    run_starting = np.diff(above_threshold_indices) != 1
 
-    return run_start_idx
+    # Find the indices of the starts of the runs and split the original indices
+    # into individual runs using them
+    runs = np.split(
+        above_threshold_indices,
+        np.nonzero(run_starting)[0] + 1,
+    )
+
+    # Return the index of the first run that is above the required run length
+    for run in runs:
+        if len(run) >= 1000*LAUNCH_BOOST_PERIOD_S//DAT_INTERVAL_MS:
+            return run[0]
+
+    raise ValueError("Unable to detect launch with given parameters")
 
 
 def extract_launch(data: pd.DataFrame) -> pd.DataFrame:
@@ -61,7 +64,7 @@ def extract_launch(data: pd.DataFrame) -> pd.DataFrame:
     """
     acc_mag = np.sqrt(data["Ax"]**2 + data["Ay"]**2 + data["Az"]**2)
 
-    launch_idx = detect_launch(acc_mag)
+    launch_idx = detect_launch(acc_mag.to_numpy())
     start_idx = launch_idx - 1000*EXTRA_RANGE_S//DAT_INTERVAL_MS
 
     pl_data = data[start_idx:]
@@ -100,13 +103,12 @@ def main():
         f"total rows in {(perf_counter_ns() - extract_start)/1e6} ms"
     )
 
-    acc_mag = np.sqrt(
-        launch_data["Ax"]**2 +
-        launch_data["Ay"]**2 +
-        launch_data["Az"]**2
+    plt.plot(
+        launch_data["Timestamp"] / 1000, launch_data["Ax"],
+        launch_data["Timestamp"] / 1000, launch_data["Ay"],
+        launch_data["Timestamp"] / 1000, launch_data["Az"],
     )
-
-    plt.plot(launch_data["Timestamp"]/1000, acc_mag)
+    plt.legend(["Ax", "Ay", "Az"])
     plt.grid()
     plt.show()
 
