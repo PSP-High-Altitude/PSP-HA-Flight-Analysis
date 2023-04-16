@@ -35,7 +35,16 @@ def extract_launch(data: pd.DataFrame) -> pd.DataFrame:
             end_idx = i
             break
 
-    return pl_data[:end_idx]
+    pd.options.mode.chained_assignment = None  # default='warn'
+
+    l_data = pl_data[:end_idx]
+
+    launch_timestamp = data["Timestamp"][launch_idx]
+    l_data["Timestamp"] -= launch_timestamp
+
+    pd.options.mode.chained_assignment = "warn"  # default='warn'
+
+    return l_data
 
 
 def main():
@@ -54,7 +63,7 @@ def main():
         launch_data["Az"]**2
     )
 
-    plt.plot(launch_data["Timestamp"], acc_mag)
+    plt.plot(launch_data["Timestamp"]/1000, acc_mag)
     plt.grid()
     plt.show()
 
