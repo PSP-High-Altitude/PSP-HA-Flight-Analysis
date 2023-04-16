@@ -10,15 +10,58 @@ TGT_FILENAME = r"dm2_dat_launch.csv"
 
 DAT_INTERVAL_MS = 30
 
+LAUNCH_THRESHOLD_G = 4
+LAUNCH_BOOST_PERIOD_S = 2
+
 EXTRA_RANGE_S = 10
-LAUNCH_THRESHOLD_G = 5
 STATIONARY_TOLERANCE_G = 0.1
 
 
+def detect_launch(acc_g: pd.Series) -> int:
+    """Detect a launch event in the given acceleration time series.
+
+    parameters:
+        acc_g - the magnitude of the acceleration experienced (in g)
+
+    returns:
+        Integer that is the index of the start of a sustained acceleration
+        greater than LAUNCH_THRESHOLD_G for a period of at least
+        LAUNCH_BOOST_PERIOD_S
+    """
+    threshold_exceeded = acc_g > LAUNCH_THRESHOLD_G
+    threshold_run_length = 1000*LAUNCH_BOOST_PERIOD_S//DAT_INTERVAL_MS
+
+    run_length = 0
+    run_start_idx = 0
+    for i, exceeded in enumerate(threshold_exceeded):
+        if exceeded:
+            if run_length == 0:
+                run_start_idx = i
+            run_length += 1
+        else:
+            run_length = 0
+        if run_length > threshold_run_length:
+            break
+    else:  # Did not find a run of sufficient length
+        raise ValueError("Unable to detect launch with given parameters")
+
+    return run_start_idx
+
+
 def extract_launch(data: pd.DataFrame) -> pd.DataFrame:
+    """Extract the part of the given dataframe corresponding to launch.
+
+    parameters:
+        data - pandas dataframe containing the Timestamp and x, y, and z acc
+
+    returns:
+        Trimmed dataframe with only the rows that extend from EXTRA_RANGE_S
+        seconds before the launch event to EXTRA_RANGE_S seconds after the
+        landing event with the timestamp zeroed to launch
+    """
     acc_mag = np.sqrt(data["Ax"]**2 + data["Ay"]**2 + data["Az"]**2)
 
-    launch_idx = np.argmax(acc_mag > LAUNCH_THRESHOLD_G)
+    launch_idx = detect_launch(acc_mag)
     start_idx = launch_idx - 1000*EXTRA_RANGE_S//DAT_INTERVAL_MS
 
     pl_data = data[start_idx:]
