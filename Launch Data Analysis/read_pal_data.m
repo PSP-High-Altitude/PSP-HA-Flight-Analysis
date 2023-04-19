@@ -6,65 +6,48 @@ clc; clear all;
 
 disp("Starting Importing");
 
-imu_in = readtable("dm2_dat_04.csv");
-gps_in = readtable("dm2_gps_04.csv");
-times = imu_in.('Timestamp')(109354:113894);
-times = times - times(1);
-Ax_in = imu_in.('Ax')(109354:113894);
-Ay_in = imu_in.('Ay')(109354:113894);
-Az_in = imu_in.('Az')(109354:113894);
+data_range = 109354:113894; % Full launch
+data_range = 109354:109954; % Launch to pre parachute
+data_range = 109480:109974; % Launch through parachute
 
-figure(1); clf;
-hold on;
-plot(times, Ax_in);
-plot(times, Ay_in);
-plot(times, Az_in);
-legend('Ax', 'Ay', 'Az');
-hold off;
-
-%% Import
-
-file_in = readtable("l1 data 2023-02-11.csv");
 options = odeset('RelTol',1E-12,'AbsTol',1e-12);
 
+imu_in = readtable("dm2_dat_04.csv");
+gps_in = readtable("dm2_gps_04.csv");
+times = imu_in.('Timestamp')(data_range);
+t_data = (times - times(1)) / 1000;
+Az_in = imu_in.('Ax')(data_range);
+Ax_in = imu_in.('Ay')(data_range);
+Ay_in = imu_in.('Az')(data_range);
+A = [Ax_in Ay_in Az_in] * 9.81;
 
-movmean_val = 31;
-t_start = 180465 - 200;
-t_end = t_start + 1070;
+Rz_in = imu_in.('Rx')(data_range);
+Rx_in = imu_in.('Ry')(data_range);
+Ry_in = imu_in.('Rz')(data_range);
+w_data = deg2rad([Rx_in Ry_in Rz_in]);
 
-useful_data = t_start:t_end;
+% figure(10); clf;
+% hold on;
+% plot(t_data, Ax_in);
+% plot(t_data, Ay_in);
+% plot(t_data, Az_in);
+% legend('Ax', 'Ay', 'Az');
+% hold off;
+% 
+% figure(11); clf;
+% hold on;
+% plot(t_data, Rx_in);
+% plot(t_data, Ry_in);
+% plot(t_data, Rz_in);
+% legend('Rx', 'Ry', 'Rz');
+% hold off;
 
-% Import time data and fit to the correct range (in seconds)
-t_range = floor(100 * (file_in.('Timestamp')(useful_data))) / 100;
-t_data = (t_range - t_range(1))/1000;
-
-% Import acceleration data
-Ax_in = file_in.('Ax')(useful_data);
-Ay_in = file_in.('Ay')(useful_data);
-Az_in = file_in.('Az')(useful_data);
-
-% Convert acceleration data into a nx3 matrix, and get magnitude
-A = [Ax_in * 9.81, Ay_in * 9.81, Az_in * 9.81];
-A_mag = (A(:,1) .^ 2 + A(:,2) .^ 2 + A(:,3) .^ 2) .^ .5;
-
-% Import angular velocity AND CONVERT TO RADIANS
-Rx = deg2rad(file_in.('Rx')(useful_data));
-Ry = deg2rad(file_in.('Ry')(useful_data));
-Rz = deg2rad(file_in.('Rz')(useful_data));
-
-% Import other data, unused in the below section
-temperature = file_in.('Temp')(useful_data);
-pressure = file_in.('Pressure')(useful_data);
-pressure_all = file_in.('Pressure');
 
 disp("Finished Importing");
 
-%% Unsmoothed Computations
+%% Computations
 
-disp("Starting Unsmoothed Processing")
-
-% Convert angular velocity into an nx3 matrix
-w_data = [Rx, Ry, Rz];
+disp("Starting Processing")
 
 % Run vector rotation correction using the input vectors, angular
 % velocities, time data, and base rotation [yaw, pitch, roll]
@@ -82,11 +65,13 @@ yaw = permute(real(atan2(BN_out(1,2,:), BN_out(1,1,:))), [3, 1, 2])';
 vx_i = cumtrapz(t_data, a_i(:,1));
 vy_i = cumtrapz(t_data, a_i(:,2));
 vz_i = cumtrapz(t_data, a_i(:,3));
+vmag_i = (vx_i.^2 + vy_i.^2 + vz_i.^2).^0.5;
 
 % Use trapezoidal Riemann sums to calulate position from velocity
 dx_i = cumtrapz(t_data, vx_i);
 dy_i = cumtrapz(t_data, vy_i);
 dz_i = cumtrapz(t_data, vz_i);
+dmag_i = (dx_i.^2 + dy_i.^2 + dz_i.^2).^0.5;
 
 % Calculate horizontal distance from launch using Pythagorean theorem
 horiz_dist = (dx_i .^ 2 + dy_i .^ 2) .^ 0.5;
@@ -94,49 +79,7 @@ horiz_dist = (dx_i .^ 2 + dy_i .^ 2) .^ 0.5;
 % Calculate inclination
 inclination = atan(sqrt(tan(roll) .^ 2 + tan(pitch) .^ 2));
 
-disp("Finished Unsmoothed Processing");
-
-%% smoothed Computations
-
-disp("Starting Smoothed Processing");
-
-% Calculate smoothed angular velocity data using a moving mean
-Rxx = movmean(Rx, movmean_val);
-Ryy = movmean(Ry, movmean_val);
-Rzz = movmean(Rz, movmean_val);
-
-% Convert smoothed angular velocity into an nx3 matrix
-w_data_smoothed = [Rxx, Ryy, Rzz];
-
-% Run vector rotation correction using the input vectors, angular
-% velocities, time data, and base rotation [yaw, pitch, roll]
-[fa_i, fBN_out, fEP_hist] = vecRotCorrect(A, w_data_smoothed, t_data, [0, 90, 0]);
-
-% Add gravity to the z direction
-fa_i(:,3) = fa_i(:,3) + 9.81;
-
-% Calculate pitch, roll, and yaw from the output of the vector correction
-fpitch = permute(real(-asin(fBN_out(1,3,:))), [3, 1, 2])';
-froll = permute(real(atan2(fBN_out(2,3,:), fBN_out(3,3,:))), [3, 1, 2])';
-fyaw = permute(real(atan2(fBN_out(1,2,:), fBN_out(1,1,:))), [3, 1, 2])';
-
-% Use trapezoidal Riemann sums to calculate velocity from acceleration
-fvx_i = cumtrapz(t_data, fa_i(:,1));
-fvy_i = cumtrapz(t_data, fa_i(:,2));
-fvz_i = cumtrapz(t_data, fa_i(:,3));
-
-% Use trapezoidal Riemann sums to calulate position from velocity
-fdx_i = cumtrapz(t_data, fvx_i);
-fdy_i = cumtrapz(t_data, fvy_i);
-fdz_i = cumtrapz(t_data, fvz_i);
-
-% Calculate horizontal distance from launch using Pythagorean theorem
-fhoriz_dist = (fdx_i .^ 2 + fdy_i .^ 2) .^ 0.5;
-
-% Calculate inclination
-finclination = atan(sqrt(tan(froll) .^ 2 + tan(fpitch) .^ 2));
-
-disp("Finished Smoothed Processing");
+disp("Finished Processing");
 
 %% Processing/Plotting
 
@@ -155,20 +98,7 @@ axis equal;
 xlabel('X (m)');
 ylabel('Y (m)');
 zlabel('Altitude (m)');
-
-% Plot smoothed and unsmoothed rocket position in 3D
-figure(fig_ct);
-fig_ct = fig_ct + 1;
-clf;
-plot3(dx_i, dy_i, -dz_i);
-hold on;
-grid on;
-plot3(fdx_i, fdy_i, -fdz_i);
-legend('unsmoothed', 'smoothed');
-axis equal;
-xlabel('X (m)');
-ylabel('Y (m)');
-zlabel('Altitude (m)');
+title('Rocket Trajectory');
 
 % Clear figure for next plots
 figure(fig_ct);
@@ -176,105 +106,84 @@ fig_ct = fig_ct + 1;
 clf;
 
 % Plot pitch
-subplot(3, 3, 1);
+subplot(2, 3, 1);
 hold on;
 plot(t_data, rad2deg(pitch));
-plot(t_data, rad2deg(fpitch));
-legend('unsmoothed', 'smoothed');
-title('Pitch');
-hold off;
-
-% Plot roll
-subplot(3, 3, 2);
-hold on;
 plot(t_data, rad2deg(roll));
-plot(t_data, rad2deg(froll));
-legend('unsmoothed', 'smoothed');
-title('Roll');
-hold off;
-
-% Plot yaw
-subplot(3, 3, 3);
-hold on;
 plot(t_data, rad2deg(yaw));
-plot(t_data, rad2deg(fyaw));
-legend('unsmoothed', 'smoothed');
-title('Yaw');
+legend('pitch','roll','yaw');
+title('Rotation');
+xlabel('Time (s)');
+ylabel('Rotation (deg)');
 hold off;
 
 % Plot altitude (using -z due to NED coordinates)
-subplot(3, 3, 4);
+subplot(2, 3, 2);
 hold on;
 plot(t_data, -dz_i);
-plot(t_data, -fdz_i);
-legend('unsmoothed', 'smoothed');
 title('Altitude');
+xlabel('Time (s)');
+ylabel('Distance (m)');
 hold off;
 
 % Plot horizontal distance traveled
-subplot(3, 3, 5);
+subplot(2, 3, 3);
 hold on;
 plot(dx_i, dy_i);
-plot(fdx_i, fdy_i);
-legend('unsmoothed', 'smoothed');
 title('Horizontal Position');
+xlabel('X Distance (m)');
+ylabel('Y Distance (m)');
 hold off;
 
 % Plot inclination
-subplot(3, 3, 6);
+subplot(2, 3, 4);
 hold on;
 plot(t_data, 90 - rad2deg(inclination));
-plot(t_data, 90 - rad2deg(finclination));
-legend('unsmoothed', 'smoothed');
 title('Inclination from Vertical');
+xlabel('Time (s)');
+ylabel('Inclination (deg)');
 
 % Plot raw acceleration data
-subplot(3, 3, 7);
+subplot(2, 3, 5);
 hold on;
 plot(t_data, A);
 % plot(t_data, A_mag);
 legend('x', 'y', 'z');
-title('Raw Acceleration');
+title('Body Acceleration');
+xlabel('Time (s)');
+ylabel('Acceleration (m/s^2)');
 hold off;
 
-% Plot unsmoothed corrected acceleration data in NED coords
-subplot(3, 3, 8);
+% Plot unsmoothed corrected acceleration data in ENU coords
+subplot(2, 3, 6);
 hold on;
-plot(t_data, a_i);
+plot(t_data, [a_i(:,1) a_i(:,2) -a_i(:,3)]);
 legend('x', 'y', 'z');
-title('Corrected Acceleration (NED)');
+title('Inertial Acceleration');
+xlabel('Time (s)');
+ylabel('Acceleration (m/s^2)');
 hold off;
 
-% Plot smoothed corrected acceleration data in NED coords
-subplot(3, 3, 9);
-hold on;
-plot(t_data, fa_i);
-legend('x', 'y', 'z');
-title('Corrected Smoothed Acceleration (NED)');
-hold off;
-
-% Plot roll in 3D
-figure(fig_ct);
-fig_ct = fig_ct + 1;
-clf;
-plot3(cos(roll), sin(roll), -dz_i);
-title("Roll");
-hold on;
-grid on;
-% axis equal;
-plot3(cos(froll), sin(froll), -fdz_i);
-legend('unsmoothed', 'smoothed');
-hold off;
+% % Plot roll in 3D
+% figure(fig_ct);
+% fig_ct = fig_ct + 1;
+% clf;
+% plot3(cos(yaw), sin(yaw), dz_i);
+% title("Yaw");
+% hold on;
+% grid on;
+% xlim([-1 1]);
+% ylim([-1 1]);
+% % axis equal;
+% hold off;
 
 % Output max altitude, max horizontal distance, and max inclination
-fprintf("\n-=-=-=-\n");
-fprintf("Maximum altitude: %.2f m (smoothed: %.2f m)\n", max(-dz_i), max(-fdz_i));
-fprintf("Maximum distance from launchpad: %.2f m (smoothed: %.2f m)\n", max(horiz_dist), max(fhoriz_dist));
-fprintf("Maximum inclination: %.2f deg (smoothed: %.2f deg)\n", max(90 - rad2deg(inclination)), max(90 - rad2deg(finclination)));
 fprintf("-=-=-=-\n");
-
-fig_ct;
-clear fig_ct;
+fprintf("Maximum altitude: %.2f m\n", max(-dz_i));
+fprintf("Maximum distance from launchpad (before apogee): %.2f m\n", max(horiz_dist));
+fprintf("Maximum velocity: %.2f m/s\n", max(vmag_i));
+fprintf("Approximate maximum Mach value: Mach %.2f\n", max(vmag_i)/343);
+fprintf("-=-=-=-\n\n");
 
 %% Old stuff
 
