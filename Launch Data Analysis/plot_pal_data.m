@@ -1,5 +1,7 @@
-% read_pal_data;
+read_pal_data;
 close all;
+
+rocket_scale = 30;
 
 rocket_radius = .5;
 rocket_height = 10;
@@ -8,15 +10,16 @@ rocket_height_steps = 5;
 
 cap_steps = 3;
 
-cone_height = 5;
+cone_height = 2;
 cone_height_steps = 3;
 
-fin_height = 2;
+fin_height = 1;
 fin_tip_height = 1;
 fin_length = 1;
 fin_steps = 5;
 
 t_factor = 1;
+height_ratio = 40/293; % Ratio of (board distance from top) / (total rocket height)
 filename = 'dm2.gif';
 
 % Obtained from https://gml.noaa.gov/grad/solcalc/azel.html
@@ -94,8 +97,9 @@ t_quats = quat2tform(EP_hist);
 transforms = zeros(size(t_quats));
 
 for i=1:size(t_quats,3)
-    transforms(:,:,i) = t_quats(:,:,i) * makehgtform('translate', [-total_height/2 0 0]);
-%     transforms(:,:,i) = transforms(:,:,i) * makehgtform('translate', [dx_i(i) dy_i(i) dz_i(i)]);
+    transforms(:,:,i) = makehgtform('translate', [dx_i(i) dy_i(i) -dz_i(i)]) * makehgtform('translate', [-total_height*(1-height_ratio)*rocket_scale 0 0]);
+    transforms(:,:,i) = transforms(:,:,i) * t_quats(:,:,i);
+    transforms(:,:,i) = transforms(:,:,i) * makehgtform('scale', [rocket_scale rocket_scale rocket_scale]);
 end
 
 
@@ -104,17 +108,22 @@ shading interp;
 colormap gray;
 
 axis equal;
-xlim([-total_height total_height] / 2);
-ylim([-total_height total_height] / 2);
-zlim([-total_height total_height] / 2);
-axis off;
+% xlim([-total_height total_height] / 2);
+% ylim([-total_height total_height] / 2);
+% zlim([-total_height total_height] / 2);
+
+% xlim([-1000 1000]);
+% ylim([-1000 1000]);
+% zlim([-1000 1000]);
+% axis off;
 
 % xlabel('x');
 % ylabel('y');
 % zlabel('z')
-% xlim([min(dz_i) max(dz_i)]);
-% ylim([min(dx_i) max(dx_i)]);
-% zlim([min(-dy_i) max(-dy_i)]);
+
+xlim([min(dx_i)-rocket_height*rocket_scale max(dx_i)+rocket_height*rocket_scale]);
+ylim([min(dy_i)-rocket_height*rocket_scale max(dy_i)+rocket_height*rocket_scale]);
+zlim([min(-dz_i)-rocket_height*rocket_scale max(-dz_i)+rocket_height*rocket_scale]);
 
 t = [timer()];
 tdiff = diff(t_data);

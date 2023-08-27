@@ -104,6 +104,14 @@ title('Rocket Trajectory');
 figure(fig_ct);
 fig_ct = fig_ct + 1;
 clf;
+plot(t_data, [dx_i dy_i -dz_i]);
+legend('Dx', 'Dy', 'Dz');
+title('Rotation Correction Algorithm');
+
+% Clear figure for next plots
+figure(fig_ct);
+fig_ct = fig_ct + 1;
+clf;
 
 % Plot pitch
 subplot(2, 3, 1);
