@@ -31,19 +31,17 @@ data.Rz; % rotation rate about the z (yaw?) axis, in dps.
 %{
 First let's plot the data we have:
 %}
-figNum = 1;
 
-figure(figNum) % create a new figure
-clf
+figure() % create a new figure
 
-hold on
+hold on % allows adding multiple lines to one plot
 
 % plot each axis on the same plot
-plot(data.Timestamp/1000, data.Ax, DisplayName="Ax");
-plot(data.Timestamp/1000, data.Ay, DisplayName="Ay");
-plot(data.Timestamp/1000, data.Az, DisplayName="Az");
-
+plot(data.Timestamp/1000, data.Ax, DisplayName="Ax"); % plot the x values
+plot(data.Timestamp/1000, data.Ay, DisplayName="Ay"); % plot the y values
+plot(data.Timestamp/1000, data.Az, DisplayName="Az"); % plot the z values
 hold off
+
 % make the graph pretty
 xlabel("time (s)")
 ylabel("accel (g)")
@@ -55,31 +53,24 @@ grid("on")
 Note that the x acceleration starts at 1g. How would you fix this?
 %}
 
-%% Integration time!
+%% Math time!
 points = length(data.Timestamp); % the number of data points (rows) we have
 vSum = [0,0,0];
 xSum = [0,0,0];
-velocity = zeros(points, 3);
-position = zeros(points, 3);
+velocity = zeros(points, 3); % this is an empty matrix for velocity
+position = zeros(points, 3); % this is an empty matrix for position
 g = 9.81;
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% put some math here to get velocity and position
 
-
-
-for i = 2:(points - 1)
-    velocity(i,:) = vSum;
-    position(i+1,:) = xSum;
-    dt = (data.Timestamp(i + 1) - data.Timestamp(i)) / 1000; % delta time, converted to s
-    vSum = vSum + [data.Ax(i + 1) - 1, data.Ay(i), data.Az(i)] * g * dt; % 
-    xSum = xSum + vSum * dt;
-end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Integration Plot
 g_offset = [0,-1,0,0];
-figNum = figNum+1;
 
 % set up figure
-figure(figNum)
-clf
+figure()
 
 % Acceleration plot
 subplot(3,1,1) % create the graphs on one figure, and work on the first graph
