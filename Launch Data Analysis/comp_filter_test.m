@@ -9,8 +9,6 @@ data_range = 109480:109974; % Launch through parachute
 
 plotstuff = (109480-100):109480;
 
-rot_init = [90 0 0]; % [roll pitch yaw]
-
 imu_in = readtable("dm2_dat_04.csv");
 times = imu_in.('Timestamp')(data_range);
 t_data = (times - times(1)) / 1000;
@@ -82,15 +80,7 @@ title("Complementary Filter");
 
 fprintf("Max altitude: %f m\n", max(dz_i));
 
+% these no longer apply
 % Old code: 1348.50m
 % New code: 1337.30m
 % New code + initial angle: 1320.45m
-%% Other EKF Testing
-
-accel = insAccelerometer;
-gyro = insGyroscope;
-pose_model = insMotionPose;
-filter = insEKF(accel, gyro, pose_model);
-
-stateparts(filter, 'Orientation', eul2quat(deg2rad(rot_init), 'XYZ'));
-
