@@ -98,6 +98,7 @@ transforms = zeros(size(t_quats));
 
 for i=1:size(t_quats,3)
     transforms(:,:,i) = makehgtform('translate', [dx_i(i) dy_i(i) -dz_i(i)]) * makehgtform('translate', [-total_height*(1-height_ratio)*rocket_scale 0 0]);
+    transforms(:,:,i) = makehgtform('translate', [0 0 0]) * makehgtform('translate', [-total_height*(1-height_ratio)*rocket_scale 0 0]);
     transforms(:,:,i) = transforms(:,:,i) * t_quats(:,:,i);
     transforms(:,:,i) = transforms(:,:,i) * makehgtform('scale', [rocket_scale rocket_scale rocket_scale]);
 end
@@ -121,9 +122,9 @@ axis equal;
 % ylabel('y');
 % zlabel('z')
 
-xlim([min(dx_i)-rocket_height*rocket_scale max(dx_i)+rocket_height*rocket_scale]);
-ylim([min(dy_i)-rocket_height*rocket_scale max(dy_i)+rocket_height*rocket_scale]);
-zlim([min(-dz_i)-rocket_height*rocket_scale max(-dz_i)+rocket_height*rocket_scale]);
+% xlim([min(dx_i)-rocket_height*rocket_scale max(dx_i)+rocket_height*rocket_scale]);
+% ylim([min(dy_i)-rocket_height*rocket_scale max(dy_i)+rocket_height*rocket_scale]);
+% zlim([min(-dz_i)-rocket_height*rocket_scale max(-dz_i)+rocket_height*rocket_scale]);
 
 t = [timer()];
 tdiff = diff(t_data);

@@ -6,9 +6,10 @@ clc; clear all;
 
 disp("Starting Importing");
 
-data_range = 109354:113894; % Full launch
-data_range = 109354:109954; % Launch to pre parachute
+% data_range = 109354:113894; % Full launch
+% data_range = 109354:109954; % Launch to pre parachute
 data_range = 109480:109974; % Launch through parachute
+% data_range = 109480:110074; % Launch through parachute +
 
 options = odeset('RelTol',1E-12,'AbsTol',1e-12);
 
