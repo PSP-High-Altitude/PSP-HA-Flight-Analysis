@@ -13,6 +13,7 @@ classdef flightAlg_v1 < state_estimator
     end
     properties
         phase = 1;
+        phaseCutoffs;
         i = 1;
         g = -9.81; % m/s
 
@@ -34,6 +35,7 @@ classdef flightAlg_v1 < state_estimator
 
             % create an acceleration integrator (update to a better one
             % later)
+            obj.phaseCutoffs = zeros(1, length(obj.phaseNames));
             obj.acc_est = accel_integration(size);
             switch obj.upAxis
                 case 1
@@ -71,15 +73,54 @@ classdef flightAlg_v1 < state_estimator
                     obj.states.PosEast(obj.i) = 0;
                     obj.states.PosDown(obj.i) = 0;
                     
-                    avec = obj.accBodyVec();
-                    if (avec(obj.upAxis) > obj.BOOST_ACCEL)
+                    avec = obj.accBodyVec(obj.i);
+                    if (avec(obj.upAxis) > obj.BOOST_ACCEL) % movev to next phase
                         obj.phase = 2;
-                        % obj.acc_est.i = 
+                        obj.phaseCutoffs(obj.phase) = obj.times(obj.i); % save phase transition time
+                        % initialize accel integrator
+                        obj.acc_est.times(obj.i) = obj.times(obj.i);
+                        obj.acc_est.i = obj.i + 1; 
                     end
+
                 case 2 % boost
+                    obj.acc_est = obj.acc_est.integrate(sample);
+
+                    % copy over everything excpt body acceleration
+                    obj.states(obj.i, 1:12) = obj.acc_est.states(obj.i, 1:12);
+                    obj.states(obj.i, 16:21) = obj.acc_est.states(obj.i, 16:21);
+                    
+                    avec = obj.accBodyVec(obj.i);
+                    if (avec(obj.upAxis) < 0) % move to next phase
+                        obj.phase = 3;
+                        obj.phaseCutoffs(obj.phase) = obj.times(obj.i); % save phase transition time
+                    end
+
                 case 3 % fast
+                    obj.acc_est = obj.acc_est.integrate(sample);
+
+                    % copy over everything excpt body acceleration
+                    obj.states(obj.i, 1:12) = obj.acc_est.states(obj.i, 1:12);
+                    obj.states(obj.i, 16:21) = obj.acc_est.states(obj.i, 16:21);
+                    
+                    if (-1 * obj.states.VelDown(obj.i) > obj.FAST_SPEED) % move to next phase
+                        obj.phase = 4;
+                        obj.phaseCutoffs(obj.phase) = obj.times(obj.i); % save phase transition time
+                    end
+
                 case 4 % coast
+                    obj.acc_est = obj.acc_est.integrate(sample);
+
+                    % copy over everything excpt body acceleration
+                    obj.states(obj.i, 1:12) = obj.acc_est.states(obj.i, 1:12);
+                    obj.states(obj.i, 16:21) = obj.acc_est.states(obj.i, 16:21);
+                    
+                    if (-1 * obj.states.VelDown(obj.i) < obj.DROGUE_SPEED) % move to next phase
+                        obj.phase = 5;
+                        obj.phaseCutoffs(obj.phase) = obj.times(obj.i); % save phase transition time
+                    end
+
                 case 5 % drogue
+                    % switch to baro only
                 case 6 % main
             end
 

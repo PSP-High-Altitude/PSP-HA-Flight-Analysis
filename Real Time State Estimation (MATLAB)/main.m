@@ -42,25 +42,6 @@ end
 %% POST PROCESS / GRAPHS
 est1.makegraphs(1, tMin)
 pal.makegraphs(2, tMin)
-% figure(1)
-% hold off
-% subplot(3,1,1)
-% plot(est1.times-tMin/1000, est1.states.AccBodyY)
-% grid
-% xlabel("time (s)")
-% ylabel("acc x (m/s^2)")
-% 
-% subplot(3,1,2)
-% plot(est1.times-tMin/1000, est1.VelUp())
-% grid
-% xlabel("time (s)")
-% ylabel("vel up (m/s)")
-% 
-% subplot(3,1,3)
-% plot(est1.times-tMin/1000, est1.PosUp())
-% grid
-% xlabel("time (s)")
-% ylabel("pos up (m)")
-% 
+
 disp("done")
 
