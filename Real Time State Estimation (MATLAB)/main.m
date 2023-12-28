@@ -9,8 +9,8 @@ filename = "dm3_PAL_dat.csv"; % name of file here!
 dataStream = readtable(filename);
 
 % Set t
-tMin = 2240e3; % ms
-tMax = 2269e3;
+tMin = 2230e3; % ms
+tMax = 2271e3;
 
 % or use entire data set
 % tmin = 0;
