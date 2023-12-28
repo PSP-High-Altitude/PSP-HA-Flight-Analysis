@@ -1,13 +1,12 @@
-PSPHA-Flight-Ananysis
+## PSPHA-Flight-Analysis
 
-A quick summary of what is going on here.
+There's a lot of stuff in this repo. The most recent/current section is the Real Time State Estimation
 
-FOLDER ORGANIZATION:
-Data files: csv files of flight data
-In FLight Estimation Testing: stuff Adam was working on ?
-Kalman Filter: Simulink Kalman Filter attempt (unfinished and nonfunctional)
-Launch Data Anaylsis
-Onboarding Project: recreate basic post flight anaysis f0r onboarding
-Real Time State Estimation (MATLAB) - **CURENT PROJECT** create real time capable software in matlab
+### Folder organization: 
+Data files: csv files of flight data \
+In FLight Estimation Testing: stuff Adam was working on ? \
+Kalman Filter: Simulink Kalman Filter attempt (unfinished and nonfunctional) \
+Launch Data Anaylsis: Post Flight analysis matlab scripts (with orientation) \
+Onboarding Project: recreate basic post flight anaysis for onboarding \
+Real Time State Estimation (MATLAB) - **CURENT PROJECT** create real time capable software in matlab \
 
-test
