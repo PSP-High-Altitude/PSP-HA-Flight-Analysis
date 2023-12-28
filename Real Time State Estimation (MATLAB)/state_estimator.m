@@ -76,7 +76,17 @@ classdef state_estimator
 %                         );
             disp("state table setup done")
         end
-
+        function vec = accBodyVec(i1, i2)
+            if (nargin > 1)
+                vec = zeros(i1-i2 + 1, 3);
+                vec(:,1) = obj.states.AccBodyX(i1:i2);
+                vec(:,2) = obj.states.AccBodyY(i1:i2);
+                vec(:,3) = obj.states.AccBodyZ(i1:i2);
+            else
+                vec = [obj.states.AccBodyX(i1), obj.states.AccBodyY(i1), obj.states.AccBodyZ(i1)];
+            end
+        end
+    %% Dependent Property functions
         % Convert down to up
         function up = get.PosUp(obj)
             up = -1 * obj.states.PosDown;
@@ -84,6 +94,7 @@ classdef state_estimator
         function up = get.VelUp(obj)
             up = -1 * obj.states.VelDown;
         end
+        
 
         function makegraphs(obj, varargin)
         % makegraphs Plots state of this state estimator

@@ -19,7 +19,8 @@ tMax = 2269e3;
 iMin = interp1(dataStream.Timestamp,1:length(dataStream.Timestamp),tMin,'nearest');
 iMax = interp1(dataStream.Timestamp,1:length(dataStream.Timestamp),tMax,'nearest');
 
-est1 = accel_integration(iMax-iMin);
+est1 = accel_integration(iMax-iMin + 1);
+pal = flightAlg_v1(iMax-iMin + 1);
 
 %% LOOP
 i = iMin;
@@ -31,14 +32,16 @@ while (i <= iMax)
         dataStream.Pressure, dataStream.Temp);
     
     % do estimations
-    est1 = est1.integrate(sample); % update self, idk why
+    est1 = est1.integrate(sample); % update self, idk why its stupid
+    pal = pal.update(sample);
 
     % increment i
     i = i + 1;
 end
 
 %% POST PROCESS / GRAPHS
-est1.makegraphs()
+est1.makegraphs(1, tMin)
+pal.makegraphs(2, tMin)
 % figure(1)
 % hold off
 % subplot(3,1,1)
