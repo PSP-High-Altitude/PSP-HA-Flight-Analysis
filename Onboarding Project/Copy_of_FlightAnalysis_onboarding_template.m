@@ -66,20 +66,15 @@ g = 9.81;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Integration Plot
-g_offset = [0,-1,0,0];
+%% 3 plot figure
 
 % set up figure
 figure()
 
-% Acceleration plot
+%% Acceleration plot
 subplot(3,1,1) % create the graphs on one figure, and work on the first graph
-hold on
-for a = 2:4
-    varName = data.Properties.VariableNames(a);
-    plot(data.Timestamp / 1000, (data{:, varName} + g_offset(a)) * g, "Displayname", char(varName))
-end
-hold off
+
+% Use the code above to plot acceleration here
 
 % plot formatting
 xlabel("time (s)")
@@ -88,7 +83,7 @@ title("Acceleration" + " vs Time")
 legend("show")
 grid("on")
 
-% Velocity plot
+%% Velocity plot
 subplot(3,1,2)
 hold on
 names = ["vx", "vy", "vz"];
@@ -103,7 +98,7 @@ title("Velocity" + " vs Time")
 legend("show")
 grid("on")
 
-% Displacement Plot
+%% Displacement Plot
 subplot(3,1,3)
 hold on
 names = ["Xx", "Xy", "Xz"];
@@ -116,3 +111,5 @@ ylabel("displacement (m)")
 title("Displacement" + " vs Time")
 legend("show")
 grid("on")
+
+print("done")
