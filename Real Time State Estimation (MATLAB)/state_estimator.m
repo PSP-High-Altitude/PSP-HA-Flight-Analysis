@@ -46,7 +46,7 @@ classdef state_estimator
                            "VelNorth" "VelEast" "VelDown" ...
                            "AccNorth" "AccEast" "AccDown" ...
                            "VelBodyX" "VelBodyY" "VelBodyZ" ...
-                           "AccBodyX" "AccBodY" "AccBodyZ" ...
+                           "AccBodyX" "AccBodyY" "AccBodyZ" ...
                            "PitchAngle" "YawAngle" "RollAngle" ...
                            "PitchRate" "YawRate" "RollRate"]);
 %             VariableUnits=["m" "m" "m" "m/s" "m/s" "m/s" "m/s^2" "m/s^2" "m/s^2" ...
@@ -74,6 +74,7 @@ classdef state_estimator
             up = -1 * obj.states.VelDown;
         end
         
+%% GRAPHS
 
         function makegraphs(obj, varargin)
         % makegraphs Plots state of this state estimator
@@ -118,6 +119,83 @@ classdef state_estimator
             xlabel("time (s)")
             ylabel("pos up (m)")
                     
+        end
+    end
+    methods (Static)
+        function compareGraphs(varargin)
+            % COMPAREGRAPHS
+            % input: fig numper (opt), reference state, second state
+            % Plots multiple states sets on one graph
+            % first state is assumed to be reference
+            % by default only plots pos and vel
+            
+            % input parser
+            p = inputParser;
+            validNum = @(x) isnumeric(x) && isscalar(x) && (x >= 0); % function handle
+            validState = @(s) isa(s, 'state_estimator'); 
+            addRequired(p, 'figNum', validNum)
+            addRequired(p, 's1', validState)
+            addRequired(p, 's2', validState)
+            addOptional(p, 'tMin', 0, validNum)
+            addOptional(p, 'tMax', -1, validNum)
+
+            parse(p,varargin{:});
+
+            figNum = p.Results.figNum;
+            ref = p.Results.s1;
+            est1 = p.Results.s2;
+            tMin = p.Results.tMin/1000; % convert to s
+            tMax = p.Results.tMax/1000;
+
+            if (figNum > 0)
+                figure(figNum)
+            else
+                figure()
+            end
+
+            hold off
+            % subplot(3,2,1)
+            % plot(obj.times-tMin/1000, obj.states.AccBodyX, DisplayName="X")
+            % hold on
+            % plot(obj.times-tMin/1000, obj.states.AccBodyY, DisplayName="Y")
+            % plot(obj.times-tMin/1000, obj.states.AccBodyZ, DisplayName="Z")
+            % hold off
+            % grid; legend;
+            % xlabel("time (s)"); ylabel("acc y (m/s^2)");
+            
+            % velocity plot
+            subplot(2,1,1)
+            plot(est1.times-tMin, est1.VelUp(), DisplayName="estimation")
+            lim = xlim();
+            hold on;
+            plot(ref.times-tMin, ref.VelUp(), ":r", DisplayName="reference")
+            hold off
+            grid; legend;
+            xlabel("time (s)"); ylabel("vel up (m/s)");
+            if (tMin ~= 0) % set x limit
+                if (tMax > 0)
+                    xlim([tMin, tMax])
+                else
+                    xlim([lim(1), lim(2)])
+                end
+            end
+            
+            % altitude plot
+            subplot(2,1,2)
+            plot(est1.times-tMin, est1.PosUp(), DisplayName="estimation")
+            lim = xlim();
+            hold on;
+            plot(ref.times-tMin, ref.PosUp(), ":r", DisplayName="reference")
+            hold off
+            grid; legend;
+            xlabel("time (s)"); ylabel("pos up (m)");
+            if (tMin ~= 0) % set x limit
+                if (tMax > 0)
+                    xlim([tMin, tMax])
+                else
+                    xlim([lim(1), lim(2)])
+                end
+            end
         end
     end
 end

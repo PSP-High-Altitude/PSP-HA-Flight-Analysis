@@ -3,7 +3,9 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SETUP
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clearvars
 filename = "dm3_PAL_dat.csv"; % name of file here!
 dataStream = readtable(filename);
@@ -19,10 +21,14 @@ tMax = 2271e3;
 iMin = interp1(dataStream.Timestamp,1:length(dataStream.Timestamp),tMin,'nearest');
 iMax = interp1(dataStream.Timestamp,1:length(dataStream.Timestamp),tMax,'nearest');
 
-est1 = accel_integration(iMax-iMin + 1);
-pal = flightAlg_v1(iMax-iMin + 1);
+est1 = accel_integration(iMax-iMin + 1); % accleration based estimation (pre-apo)
+pal = flightAlg_v1(iMax-iMin + 1); % Full flight program
+gps = readGpsStates("dm3_PAL_gpa.csv"); % gps state, used as reference/"true" state
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LOOP
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 i = iMin;
 while (i <= iMax)
     % Get next data sample
@@ -42,6 +48,8 @@ end
 %% POST PROCESS / GRAPHS
 est1.makegraphs(1, tMin)
 pal.makegraphs(2, tMin)
+gps.makegraphs(3)
+state_estimator.compareGraphs(4, gps, pal, tMin)
 
 disp("done")
 
