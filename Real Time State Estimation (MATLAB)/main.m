@@ -23,7 +23,7 @@ iMax = interp1(dataStream.Timestamp,1:length(dataStream.Timestamp),tMax,'nearest
 
 est1 = accel_integration(iMax-iMin + 1); % accleration based estimation (pre-apo)
 pal = flightAlg_v1(iMax-iMin + 1); % Full flight program
-gps = readGpsStates("dm3_PAL_gpa.csv"); % gps state, used as reference/"true" state
+gps = readGpsStates("dm3_PAL_gpa.csv", 217); % gps state, used as reference/"true" state
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LOOP

@@ -1,4 +1,4 @@
-function gpsStates = readGpsStates(filename)
+function gpsStates = readGpsStates(filename, groundlevel)
 %READGPSSTATES Reads data from gps csv into a state_estimator object
 %   This is intended for a post-flight comparison, not "real time" use
 %   For estimation use, gps needs to be added to PALDataSample
@@ -11,5 +11,9 @@ function gpsStates = readGpsStates(filename)
     gpsStates.states.VelNorth = data.VelN(:);
     gpsStates.states.VelEast = data.VelE(:);
     gpsStates.states.VelDown = data.VelD(:);
-    gpsStates.states.PosDown = -1*data.Alt(:);
+    if (nargin < 2)
+        gpsStates.states.PosDown = -1*data.Alt(:);
+    else
+        gpsStates.states.PosDown = -1*(data.Alt(:) - groundlevel);
+
 end
