@@ -9,6 +9,7 @@ classdef state_estimator
         times =[]
         statesCalculated = [""]
         states; % table, unitialized
+        name = "";
     end
     properties (Dependent)
         PosUp % the opposite of down
@@ -20,9 +21,12 @@ classdef state_estimator
 
     methods
 
-        function obj = state_estimator(size) % constructor
-            obj = obj.setup_states(size);
-            %  constructor
+        function obj = state_estimator(size, name) % constructor
+            if (nargin == 1)
+                obj = obj.setup_states(size);
+            else
+                obj = obj.setup_states(size, name);
+            end
         end
 %         function new_estimator = state_estimator(obj, samples)
 %             obj.size = samples;
@@ -30,7 +34,7 @@ classdef state_estimator
 % %             obj.states.PosDown(:) = zeros(samples, 1);
 %         end
         
-        function obj = setup_states(obj, size) % setup state table
+        function obj = setup_states(obj, size, name) % setup state table
             obj.size = size;
             obj.times = zeros(size, 1);
             obj.states = table(Size=[size, 21], ... % includes all possible states. Not all will be used in all estimations
@@ -54,6 +58,9 @@ classdef state_estimator
 %                            "rad" "rad" "rad" "rad/s" "rad/s" "rad/s"]
 %                         );
             disp("state table setup done")
+            if (nargin == 3)
+                obj.name = name;
+            end
         end
         function vec = accBodyVec(obj, i1, i2)
             if (nargin > 2)
@@ -143,31 +150,28 @@ classdef state_estimator
 
             figNum = p.Results.figNum;
             ref = p.Results.s1;
-            est1 = p.Results.s2;
+            ests = p.Results.s2; % array of one or more estimations to plot
             tMin = p.Results.tMin/1000; % convert to s
             tMax = p.Results.tMax/1000;
 
             if (figNum > 0)
                 figure(figNum)
+                clf
             else
                 figure()
             end
 
             hold off
-            % subplot(3,2,1)
-            % plot(obj.times-tMin/1000, obj.states.AccBodyX, DisplayName="X")
-            % hold on
-            % plot(obj.times-tMin/1000, obj.states.AccBodyY, DisplayName="Y")
-            % plot(obj.times-tMin/1000, obj.states.AccBodyZ, DisplayName="Z")
-            % hold off
-            % grid; legend;
-            % xlabel("time (s)"); ylabel("acc y (m/s^2)");
             
             % velocity plot
             subplot(2,1,1)
-            plot(est1.times-tMin, est1.VelUp(), DisplayName="estimation")
+            for est = ests % plot each est
+                plot(est.times-tMin, est.VelUp(), DisplayName=est.name)
+                hold on;
+            end
+
+            % set limits and plot ref
             lim = xlim();
-            hold on;
             plot(ref.times-tMin, ref.VelUp(), ":r", DisplayName="reference")
             hold off
             grid; legend;
@@ -182,7 +186,12 @@ classdef state_estimator
             
             % altitude plot
             subplot(2,1,2)
-            plot(est1.times-tMin, est1.PosUp(), DisplayName="estimation")
+            for est = ests % plot each est
+                plot(est.times-tMin, est.PosUp(), DisplayName=est.name)
+                hold on;
+            end
+            
+            % set limits and plot ref
             lim = xlim();
             hold on;
             plot(ref.times-tMin, ref.PosUp(), ":r", DisplayName="reference")

@@ -20,10 +20,13 @@ tMax = 2271e3;
 
 iMin = interp1(dataStream.Timestamp,1:length(dataStream.Timestamp),tMin,'nearest');
 iMax = interp1(dataStream.Timestamp,1:length(dataStream.Timestamp),tMax,'nearest');
+samples = iMax-iMin + 1;
 
-est1 = accel_integration(iMax-iMin + 1); % accleration based estimation (pre-apo)
-pal = flightAlg_v1(iMax-iMin + 1); % Full flight program
+est1 = accel_integration(samples); % accleration based estimation (pre-apo)
+pal = flightAlg_v1(samples); % Full flight program
 gps = readGpsStates("dm3_PAL_gpa.csv", 217); % gps state, used as reference/"true" state
+% baro1 = baro_est(samples, 15e3, 10);
+baro2 = baro_est(samples, 15e3, 10);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LOOP
@@ -35,11 +38,13 @@ while (i <= iMax)
     sample = PALDataSample(dataStream.Timestamp(i), ...
         [dataStream.Ax(i), dataStream.Ay(i), dataStream.Az(i)], ...
         [dataStream.Rx(i), dataStream.Ry(i), dataStream.Rz(i)], ...
-        dataStream.Pressure, dataStream.Temp);
+        dataStream.Pressure(i), dataStream.Temp(i));
     
     % do estimations
     est1 = est1.integrate(sample); % update self, idk why its stupid
     pal = pal.update(sample);
+%     baro1 = baro1.update(sample, true); % with temp
+    baro2 = baro2.update(sample, false); % without temp
 
     % increment i
     i = i + 1;
@@ -50,6 +55,9 @@ est1.makegraphs(1, tMin)
 pal.makegraphs(2, tMin)
 gps.makegraphs(3)
 state_estimator.compareGraphs(4, gps, pal, tMin)
+% state_estimator.compareGraphs(5, gps, baro1, tMin)
+state_estimator.compareGraphs(5, gps, baro2, tMin)
+% state_estimator.compareGraphs(6, gps, [est1, baro2], tMin)
 
 disp("done")
 

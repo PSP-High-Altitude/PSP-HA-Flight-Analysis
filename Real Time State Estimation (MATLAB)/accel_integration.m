@@ -8,7 +8,7 @@ classdef  accel_integration < state_estimator
     methods
         function obj = accel_integration(size)
             % constructor
-            obj@state_estimator(size); % call parent constructor
+            obj@state_estimator(size, "accel int est"); % call parent constructor
 
             disp(size);
 %             obj.setup_states(size);

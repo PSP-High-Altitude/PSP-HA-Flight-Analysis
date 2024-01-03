@@ -31,7 +31,7 @@ classdef flightAlg_v1 < state_estimator
         function obj = flightAlg_v1(size)
             %UNTITLED Construct an instance of this class
             %   Detailed explanation goes here
-            obj@state_estimator(size); % call parent constructor
+            obj@state_estimator(size, "acc int"); % call parent constructor
 
             % create an acceleration integrator (update to a better one
             % later)
