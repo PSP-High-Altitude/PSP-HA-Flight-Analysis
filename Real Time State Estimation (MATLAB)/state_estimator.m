@@ -127,6 +127,16 @@ classdef state_estimator
             ylabel("pos up (m)")
                     
         end
+
+        function hist = hist(obj)
+            %HIST creates a state history object from a child state
+            %estimator. Used for comparing graphs from multiple different
+            %state estimator classes.
+            hist = state_estimator(obj.size, obj.name);
+            hist.times = obj.times;
+            hist.states = obj.states;
+        end
+
     end
     methods (Static)
         function compareGraphs(varargin)
@@ -172,7 +182,7 @@ classdef state_estimator
 
             % set limits and plot ref
             lim = xlim();
-            plot(ref.times-tMin, ref.VelUp(), ":r", DisplayName="reference")
+            plot(ref.times-tMin, ref.VelUp(), "--m", DisplayName="reference")
             hold off
             grid; legend;
             xlabel("time (s)"); ylabel("vel up (m/s)");
@@ -194,7 +204,7 @@ classdef state_estimator
             % set limits and plot ref
             lim = xlim();
             hold on;
-            plot(ref.times-tMin, ref.PosUp(), ":r", DisplayName="reference")
+            plot(ref.times-tMin, ref.PosUp(), "--m", DisplayName="reference")
             hold off
             grid; legend;
             xlabel("time (s)"); ylabel("pos up (m)");

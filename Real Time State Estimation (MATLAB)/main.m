@@ -12,7 +12,7 @@ dataStream = readtable(filename);
 
 % Set t
 tMin = 2230e3; % ms
-tMax = 2271e3;
+tMax = 2600e3;
 
 % or use entire data set
 % tmin = 0;
@@ -57,7 +57,7 @@ gps.makegraphs(3)
 state_estimator.compareGraphs(4, gps, pal, tMin)
 % state_estimator.compareGraphs(5, gps, baro1, tMin)
 state_estimator.compareGraphs(5, gps, baro2, tMin)
-% state_estimator.compareGraphs(6, gps, [est1, baro2], tMin)
+state_estimator.compareGraphs(6, gps, [baro2.hist(), pal.hist()], tMin)
 
 disp("done")
 
