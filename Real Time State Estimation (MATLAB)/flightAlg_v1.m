@@ -45,8 +45,10 @@ classdef flightAlg_v1 < state_history
                 case 3
                     obj.gz = 1;
             end
-
-            %TODO: barometric estimation here
+            
+            % create barometric estimator
+            obj.bar_est = baro_est(size,15000,5);
+            
         end
 
         function obj = update(obj, sample)
@@ -83,7 +85,7 @@ classdef flightAlg_v1 < state_history
                     end
 
                 case 2 % boost
-                    obj.acc_est = obj.acc_est.integrate(sample);
+                    obj.acc_est = obj.acc_est.update(sample);
 
                     % copy over everything excpt body acceleration
                     obj.states(obj.i, 1:12) = obj.acc_est.states(obj.i, 1:12);
@@ -96,7 +98,7 @@ classdef flightAlg_v1 < state_history
                     end
 
                 case 3 % fast
-                    obj.acc_est = obj.acc_est.integrate(sample);
+                    obj.acc_est = obj.acc_est.update(sample);
 
                     % copy over everything excpt body acceleration
                     obj.states(obj.i, 1:12) = obj.acc_est.states(obj.i, 1:12);
@@ -108,7 +110,7 @@ classdef flightAlg_v1 < state_history
                     end
 
                 case 4 % coast
-                    obj.acc_est = obj.acc_est.integrate(sample);
+                    obj.acc_est = obj.acc_est.update(sample);
 
                     % copy over everything excpt body acceleration
                     obj.states(obj.i, 1:12) = obj.acc_est.states(obj.i, 1:12);
@@ -117,10 +119,22 @@ classdef flightAlg_v1 < state_history
                     if (-1 * obj.states.VelDown(obj.i) < obj.DROGUE_SPEED) % move to next phase
                         obj.phase = 5;
                         obj.phaseCutoffs(obj.phase) = obj.times(obj.i); % save phase transition time
+                        
+                        % initialize baro integrator
+                        obj.bar_est.times(obj.i) = obj.times(obj.i);
+                        % set position so velocity doesn't spike
+                        obj.bar_est.states.PosDown(obj.i) = ...
+                            -1 * obj.bar_est.atmosHeight(sample.p * 100) - obj.bar_est.h0;
+                        obj.bar_est.i = obj.i + 1;
                     end
 
                 case 5 % drogue
                     % switch to baro only
+                    obj.bar_est = obj.bar_est.update(sample, false);
+                    % copy over everything excpt body acceleration
+                    obj.states(obj.i, 1:12) = obj.bar_est.states(obj.i, 1:12);
+                    obj.states(obj.i, 16:21) = obj.bar_est.states(obj.i, 16:21);
+                    
                 case 6 % main
             end
 

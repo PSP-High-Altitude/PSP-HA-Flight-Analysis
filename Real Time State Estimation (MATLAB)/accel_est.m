@@ -11,7 +11,7 @@ classdef  accel_est < state_history
             obj@state_history(size, "accel int est"); % call parent constructor
         end
 
-        function obj = integrate(obj, sample)
+        function obj = update(obj, sample)
             % y is up
             obj.times(obj.i) = double(sample.t / 1000); % convert to s
             obj.states.AccBodyY(obj.i) = (sample.ay - 1) * -1*obj.g; % convert to m/s^2 and correct 1g

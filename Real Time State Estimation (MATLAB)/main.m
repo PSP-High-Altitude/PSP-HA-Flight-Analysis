@@ -41,7 +41,7 @@ while (i <= iMax)
         dataStream.Pressure(i), dataStream.Temp(i));
     
     % do estimations
-    est1 = est1.integrate(sample); % update self, idk why its stupid
+    est1 = est1.update(sample); % update self, idk why its stupid
     pal = pal.update(sample);
 %     baro1 = baro1.update(sample, true); % with temp
     baro2 = baro2.update(sample, false); % without temp
