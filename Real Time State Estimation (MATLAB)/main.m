@@ -22,7 +22,7 @@ iMin = interp1(dataStream.Timestamp,1:length(dataStream.Timestamp),tMin,'nearest
 iMax = interp1(dataStream.Timestamp,1:length(dataStream.Timestamp),tMax,'nearest');
 samples = iMax-iMin + 1;
 
-est1 = accel_integration(samples); % accleration based estimation (pre-apo)
+est1 = accel_est(samples); % accleration based estimation (pre-apo)
 pal = flightAlg_v1(samples); % Full flight program
 gps = readGpsStates("dm3_PAL_gpa.csv", 217); % gps state, used as reference/"true" state
 % baro1 = baro_est(samples, 15e3, 10);
@@ -54,10 +54,10 @@ end
 est1.makegraphs(1, tMin)
 pal.makegraphs(2, tMin)
 gps.makegraphs(3)
-state_estimator.compareGraphs(4, gps, pal, tMin)
-% state_estimator.compareGraphs(5, gps, baro1, tMin)
-state_estimator.compareGraphs(5, gps, baro2, tMin)
-state_estimator.compareGraphs(6, gps, [baro2.hist(), pal.hist()], tMin)
+state_history.compareGraphs(4, gps, pal, tMin)
+% state_history.compareGraphs(5, gps, baro1, tMin)
+state_history.compareGraphs(5, gps, baro2, tMin)
+state_history.compareGraphs(6, gps, [baro2.hist(), pal.hist()], tMin)
 
 disp("done")
 

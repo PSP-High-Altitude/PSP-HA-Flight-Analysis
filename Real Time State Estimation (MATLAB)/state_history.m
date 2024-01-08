@@ -1,4 +1,4 @@
-classdef state_estimator
+classdef state_history
     
     %% PROPERTIES
     
@@ -21,7 +21,7 @@ classdef state_estimator
 
     methods
 
-        function obj = state_estimator(size, name) % constructor
+        function obj = state_history(size, name) % constructor
             if (nargin == 1)
                 obj = obj.setup_states(size);
             else
@@ -101,6 +101,7 @@ classdef state_estimator
 
             if (figNum > 0)
                 figure(figNum)
+                clf
             else
                 figure()
             end
@@ -132,7 +133,7 @@ classdef state_estimator
             %HIST creates a state history object from a child state
             %estimator. Used for comparing graphs from multiple different
             %state estimator classes.
-            hist = state_estimator(obj.size, obj.name);
+            hist = state_history(obj.size, obj.name);
             hist.times = obj.times;
             hist.states = obj.states;
         end
@@ -149,7 +150,7 @@ classdef state_estimator
             % input parser
             p = inputParser;
             validNum = @(x) isnumeric(x) && isscalar(x) && (x >= 0); % function handle
-            validState = @(s) isa(s, 'state_estimator'); 
+            validState = @(s) isa(s, 'state_history'); 
             addRequired(p, 'figNum', validNum)
             addRequired(p, 's1', validState)
             addRequired(p, 's2', validState)

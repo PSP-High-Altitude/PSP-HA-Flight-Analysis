@@ -1,4 +1,4 @@
-classdef  accel_integration < state_estimator
+classdef  accel_est < state_history
     properties
         i = 1;
         g = -9.81;
@@ -6,13 +6,9 @@ classdef  accel_integration < state_estimator
     end
 
     methods
-        function obj = accel_integration(size)
+        function obj = accel_est(size)
             % constructor
-            obj@state_estimator(size, "accel int est"); % call parent constructor
-
-            disp(size);
-%             obj.setup_states(size);
-            obj
+            obj@state_history(size, "accel int est"); % call parent constructor
         end
 
         function obj = integrate(obj, sample)
@@ -31,8 +27,8 @@ classdef  accel_integration < state_estimator
             obj.i = obj.i + 1;
         end
 
-        function inc(obj, n)
-            obj.p = obj.p + n;
-        end
+%         function inc(obj, n)
+%             obj.p = obj.p + n;
+%         end
     end
 end

@@ -1,4 +1,4 @@
-classdef baro_est < state_estimator
+classdef baro_est < state_history
     %UNTITLED Summary of this class goes here
     %   Detailed explanation goes here
 
@@ -18,7 +18,7 @@ classdef baro_est < state_estimator
             %   Detailed explanation goes here
             %   max_height - of atmosphere table to generate (m)
             %   step - atmos table step size (m)
-            obj@state_estimator(size, "baro est"); % call parent constructor;
+            obj@state_history(size, "baro est"); % call parent constructor;
             obj.heights = 0:step:max_height;
             [obj.T, obj.a, obj.P, obj.rho] = atmosisa(obj.heights);
         end

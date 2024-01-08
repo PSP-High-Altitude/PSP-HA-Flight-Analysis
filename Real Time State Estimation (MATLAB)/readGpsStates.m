@@ -4,7 +4,7 @@ function gpsStates = readGpsStates(filename, groundlevel)
 %   For estimation use, gps needs to be added to PALDataSample
     data = readtable(filename);
     length = size(data, 1);
-    gpsStates = state_estimator(length);
+    gpsStates = state_history(length);
 
     % copy gps data into states
     gpsStates.times = data.Timestamp/1000;

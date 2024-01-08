@@ -1,4 +1,4 @@
-classdef flightAlg_v1 < state_estimator
+classdef flightAlg_v1 < state_history
     %FLIGHTALG_V1 First attempt at a full flight process
     %   Detailed explanation goes here
 
@@ -31,12 +31,12 @@ classdef flightAlg_v1 < state_estimator
         function obj = flightAlg_v1(size)
             %UNTITLED Construct an instance of this class
             %   Detailed explanation goes here
-            obj@state_estimator(size, "acc int"); % call parent constructor
+            obj@state_history(size, "acc int"); % call parent constructor
 
             % create an acceleration integrator (update to a better one
             % later)
             obj.phaseCutoffs = zeros(1, length(obj.phaseNames));
-            obj.acc_est = accel_integration(size);
+            obj.acc_est = accel_est(size);
             switch obj.upAxis
                 case 1
                     obj.gx = 1;
