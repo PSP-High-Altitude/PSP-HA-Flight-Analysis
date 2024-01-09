@@ -31,13 +31,16 @@ classdef flightAlg_v1 < state_history
         function obj = flightAlg_v1(size)
             %UNTITLED Construct an instance of this class
             %   Detailed explanation goes here
-            obj@state_history(size, "acc int"); % call parent constructor
+            obj@state_history(size, "combined est"); % call parent constructor
+
+            % create space to save the times of each phase transition
+            obj.phaseCutoffs = zeros(1, length(obj.phaseNames));
 
             % create an acceleration integrator (update to a better one
             % later)
-            obj.phaseCutoffs = zeros(1, length(obj.phaseNames));
             obj.acc_est = accel_est(size);
-            switch obj.upAxis
+            
+            switch obj.upAxis % set g to correct axis
                 case 1
                     obj.gx = 1;
                 case 2
@@ -64,6 +67,9 @@ classdef flightAlg_v1 < state_history
             obj.states.AccBodyX(obj.i) = (sample.ax - obj.gx) * -1*obj.g; % convert to m/s^2 and correct 1g
             obj.states.AccBodyY(obj.i) = (sample.ay - obj.gy) * -1*obj.g; % convert to m/s^2 and correct 1g
             obj.states.AccBodyZ(obj.i) = (sample.az - obj.gz) * -1*obj.g; % convert to m/s^2 and correct 1g
+            % barometric (updates but not used in all phases)
+            obj.bar_est = obj.bar_est.update(sample);
+
             % phase dependent functions
             
             switch obj.phase
@@ -120,21 +126,20 @@ classdef flightAlg_v1 < state_history
                         obj.phase = 5;
                         obj.phaseCutoffs(obj.phase) = obj.times(obj.i); % save phase transition time
                         
-                        % initialize baro integrator
-                        obj.bar_est.times(obj.i) = obj.times(obj.i);
-                        % set position so velocity doesn't spike
-                        obj.bar_est.states.PosDown(obj.i) = ...
-                            -1 * obj.bar_est.atmosHeight(sample.p * 100) - obj.bar_est.h0;
-                        obj.bar_est.i = obj.i + 1;
                     end
 
                 case 5 % drogue
                     % switch to baro only
-                    obj.bar_est = obj.bar_est.update(sample, false);
                     % copy over everything excpt body acceleration
                     obj.states(obj.i, 1:12) = obj.bar_est.states(obj.i, 1:12);
                     obj.states(obj.i, 16:21) = obj.bar_est.states(obj.i, 16:21);
                     
+                    if (-1 * obj.states.VelDown(obj.i) < obj.DROGUE_SPEED) % move to next phase
+                        obj.phase = 5;
+                        obj.phaseCutoffs(obj.phase) = obj.times(obj.i); % save phase transition time
+                        
+                    end
+
                 case 6 % main
             end
 

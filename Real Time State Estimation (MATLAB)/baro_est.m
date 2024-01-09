@@ -36,6 +36,10 @@ classdef baro_est < state_history
         end
 
         function obj = update(obj, sample, useTemp)
+            if (nargin == 2)
+                useTemp = false;
+            end
+            
             obj.times(obj.i) = double(sample.t / 1000); % convert to s
             if (useTemp)
 %                 obj.states.PosDown(obj.i) = -1 * obj.atmosHeight(sample.p * 100, sample.T + 273.15) - obj.h0;
