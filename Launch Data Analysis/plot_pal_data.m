@@ -20,15 +20,19 @@ fin_steps = 5;
 
 t_factor = 1;
 height_ratio = 40/293; % Ratio of (board distance from top) / (total rocket height)
-filename = 'dm2.gif';
+filename = 'dm3.gif';
 
 % Obtained from https://gml.noaa.gov/grad/solcalc/azel.html
 az = 302.04;
 el = -8.53;
 
+% Obtained from https://gml.noaa.gov/grad/solcalc/azel.html
+az = 197.28;
+el = 30.06;
+
 total_height = rocket_height + cone_height;
 theta = linspace(0, 2*pi, theta_steps);
-height = linspace(0,rocket_height,rocket_height_steps);
+height = linspace((1 - height_ratio) * rocket_height, height_ratio * rocket_height,rocket_height_steps);
 bodyY = cos(theta)' * (ones(size(height))) * rocket_radius;
 bodyZ = sin(theta)' * (ones(size(height))) * rocket_radius;
 bodyX = (ones(size(theta)))' * height;
@@ -45,8 +49,8 @@ coneX = (ones(size(theta)))' * height;
 
 coneX = coneX + rocket_height;
 
-heights = linspace(0, fin_height, fin_steps);
-tip_heights = linspace(0, fin_tip_height, fin_steps);
+heights = linspace((1 - height_ratio) * fin_height, height_ratio * fin_height, fin_steps);
+tip_heights = linspace((1 - height_ratio) * fin_tip_height, height_ratio * fin_tip_height, fin_steps);
 lengths = linspace(0, fin_length, fin_steps);
 
 theta = 0;
@@ -98,7 +102,7 @@ transforms = zeros(size(t_quats));
 
 for i=1:size(t_quats,3)
     transforms(:,:,i) = makehgtform('translate', [dx_i(i) dy_i(i) -dz_i(i)]) * makehgtform('translate', [-total_height*(1-height_ratio)*rocket_scale 0 0]);
-    transforms(:,:,i) = makehgtform('translate', [0 0 0]) * makehgtform('translate', [-total_height*(1-height_ratio)*rocket_scale 0 0]);
+%     transforms(:,:,i) = makehgtform('translate', [0 0 0]) * makehgtform('translate', [-total_height*(1-height_ratio)*rocket_scale 0 0]);
     transforms(:,:,i) = transforms(:,:,i) * t_quats(:,:,i);
     transforms(:,:,i) = transforms(:,:,i) * makehgtform('scale', [rocket_scale rocket_scale rocket_scale]);
 end
@@ -113,14 +117,14 @@ axis equal;
 % ylim([-total_height total_height] / 2);
 % zlim([-total_height total_height] / 2);
 
-% xlim([-1000 1000]);
-% ylim([-1000 1000]);
-% zlim([-1000 1000]);
-% axis off;
+% xlim([-500 100]);
+% ylim([-300 300]);
+% zlim([-200 400]);
+axis off;
 
 % xlabel('x');
 % ylabel('y');
-% zlabel('z')
+% zlabel('z');
 
 % xlim([min(dx_i)-rocket_height*rocket_scale max(dx_i)+rocket_height*rocket_scale]);
 % ylim([min(dy_i)-rocket_height*rocket_scale max(dy_i)+rocket_height*rocket_scale]);
@@ -129,11 +133,13 @@ axis equal;
 t = [timer()];
 tdiff = diff(t_data);
 tdiff(end+1) = tdiff(end);
-
+% close all;
 for i=1:max(size(t_quats))
-    t(i) = timer('TimerFcn',@(~,~)animFUNC(tf, transforms(:,:,i), filename, i, tdiff(i)), 'StartDelay',t_data(i)/t_factor);
+%     t(i) = timer('TimerFcn',@(~,~)animFUNC(tf, transforms(:,:,i), filename, i, tdiff(i)), 'StartDelay',0);
+    t(i) = timer('TimerFcn',@(~,~)animFUNC(tf, transforms(:,:,i), filename, i, tdiff(i), 0), 'StartDelay',t_data(i)/t_factor);
 
 end
 start(t);
 pause(t_data(end)/t_factor)
+% pause(10*60)
 delete(t);

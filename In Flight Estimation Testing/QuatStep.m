@@ -18,6 +18,7 @@ qsum = zeros(size(W));
 for i=0:k
     qsum = qsum + (dt * W / 2) ^ k / factorial(k);
 
+quat = (dt / 2) * [1 -wx -wy -wz; wx 1 wz -wy; wy -wz 1 wx; wz wy -wx 1] * q;
 quat = quat / norm(quat);
 end
 

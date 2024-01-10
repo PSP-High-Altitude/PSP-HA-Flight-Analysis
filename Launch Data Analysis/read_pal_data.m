@@ -11,10 +11,15 @@ disp("Starting Importing");
 data_range = 109480:109974; % Launch through parachute
 % data_range = 109480:110074; % Launch through parachute +
 
+
 options = odeset('RelTol',1E-12,'AbsTol',1e-12);
 
-imu_in = readtable("dm2_dat_04.csv");
-gps_in = readtable("dm2_gps_04.csv");
+imu_in = readtable("dat_dm3.csv");
+gps_in = readtable("gps_dm3.csv");
+data_range = 79564:length(imu_in.('Timestamp'));
+data_range = 71509:length(imu_in.('Timestamp'));
+data_range = data_range(10667:23670);
+data_range = data_range(232:1357);
 times = imu_in.('Timestamp')(data_range);
 t_data = (times - times(1)) / 1000;
 Az_in = imu_in.('Ax')(data_range);
@@ -27,11 +32,13 @@ Rx_in = imu_in.('Ry')(data_range);
 Ry_in = imu_in.('Rz')(data_range);
 w_data = deg2rad([Rx_in Ry_in Rz_in]);
 
+baro = imu_in.('Pressure')(data_range);
+
 % figure(10); clf;
 % hold on;
-% plot(t_data, Ax_in);
-% plot(t_data, Ay_in);
-% plot(t_data, Az_in);
+% plot(Ax_in);
+% plot(Ay_in);
+% plot(Az_in);
 % legend('Ax', 'Ay', 'Az');
 % hold off;
 % 
@@ -78,7 +85,7 @@ dmag_i = (dx_i.^2 + dy_i.^2 + dz_i.^2).^0.5;
 horiz_dist = (dx_i .^ 2 + dy_i .^ 2) .^ 0.5;
 
 % Calculate inclination
-inclination = atan(sqrt(tan(roll) .^ 2 + tan(pitch) .^ 2));
+inclination = atan(sqrt(tan(yaw) .^ 2 + tan(pitch) .^ 2));
 
 disp("Finished Processing");
 
@@ -108,6 +115,38 @@ clf;
 plot(t_data, [dx_i dy_i -dz_i]);
 legend('Dx', 'Dy', 'Dz');
 title('Rotation Correction Algorithm');
+
+% Clear figure for next plots
+figure(fig_ct);
+fig_ct = fig_ct + 1;
+clf;
+plot(-dz_i, baro);
+title('Altitude vs Pressure');
+xlabel('Height (m)');
+ylabel('Pressure (?)');
+
+% Clear figure for next plots
+figure(fig_ct);
+fig_ct = fig_ct + 1;
+clf;
+plot(rad2deg(pitch), rad2deg(yaw));
+title('Vertical Orientation');
+xlabel('Pitch');
+ylabel('Yaw');
+axis equal;
+
+% Clear figure for next plots
+figure(fig_ct);
+fig_ct = fig_ct + 1;
+clf;
+hold on;
+plot(t_data, vx_i);
+plot(t_data, vy_i);
+plot(t_data, -vz_i);
+title('Velocity');
+xlabel('Time');
+ylabel('Velocity');
+legend('x', 'y', 'z');
 
 % Clear figure for next plots
 figure(fig_ct);

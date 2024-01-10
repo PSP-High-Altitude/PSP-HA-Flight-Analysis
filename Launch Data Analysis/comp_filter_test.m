@@ -9,7 +9,11 @@ data_range = 109480:109974; % Launch through parachute
 
 plotstuff = (109480-100):109480;
 
-imu_in = readtable("dm2_dat_04.csv");
+imu_in = readtable("dat_dm3.csv");
+data_range = 71509:length(imu_in.('Timestamp'));
+data_range = data_range(10667:23670);
+data_range = data_range(232:1357);
+data_range = data_range(216:end);
 times = imu_in.('Timestamp')(data_range);
 t_data = (times - times(1)) / 1000;
 Ax_in = imu_in.('Ax')(data_range);
@@ -30,8 +34,9 @@ atAy = sum(tAy) / length(tAy);
 atAz = sum(tAz) / length(tAz);
 
 atAxz = sqrt(atAx ^ 2 + atAz ^ 2);
-vert_ang = rad2deg(atan(atAy/atAxz));
-rot_init = [vert_ang 0 0];
+% vert_ang = rad2deg(atan(atAy/atAxz));
+rot_init = [90 0 0];
+
 
 % plot(t_plot, [tAx tAy tAz]);
 % legend('x', 'y', 'z');
@@ -67,6 +72,11 @@ dy_i = cumtrapz(t_data, vy_i);
 dz_i = cumtrapz(t_data, vz_i);
 dmag_i = (dx_i.^2 + dy_i.^2 + dz_i.^2).^0.5;
 D_i = [dx_i dy_i dz_i];
+
+figure(figNum); clf; figNum = figNum + 1;
+plot(A);
+legend('Ax', 'Ay', 'Az');
+title("Raw Acceleration");
 
 figure(figNum); clf; figNum = figNum + 1;
 plot(t_data, D_i);

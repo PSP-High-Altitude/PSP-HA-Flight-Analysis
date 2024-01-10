@@ -16,7 +16,7 @@ Ry_in = imu_in.('Rz')(data_range);
 w_data = deg2rad([Rx_in Ry_in Rz_in])';
 % w_data = rad2deg([Rx_in Ry_in Rz_in])';
 
-qrot = eul2quat([90 0 0])';
+qrot = eul2quat(deg2rad([0 90 0]))';
 
 v0 = [0;0;0];
 
@@ -25,10 +25,11 @@ vw = va;
 dt = 30e-3;
 vac = v0;
 vv = v0;
-vd = v0;
+vd = v0; 
 
 vd_all = zeros(size(A));
 d_all = zeros([length(t_data),1])';
+ac_all = zeros([length(t_data),3])';
 q_all = zeros([length(t_data), 4])';
 eul_all = zeros([length(t_data), 3])';
 w_prev = v0;
@@ -37,8 +38,8 @@ a_prev = v0;
 for i=1:length(t_data)
     w = w_data(:,i)';
     a = A(:,i);
-    [vac, vv, vd, qrot] = UpdatePose(a, a_prev, w*0, w_prev*0, dt, vac, vv, vd, qrot);
-    w_prev = w;
+    [vac, vv, vd, qrot] = UpdatePose(a, w, dt, vac, vv, vd, qrot);
+    ac_all(:,i) = vac;
     a_prev = a;
     vd_all(:,i) = vd;
     d_all(i) = norm(vd);
@@ -65,5 +66,10 @@ figure(figct); figct = figct + 1;
 plot(t_data, eul_all);
 legend('roll','pitch','yaw');
 
-figure(figct); fogct = figct + 1;
+figure(figct); figct = figct + 1;
 plot(t_data, A);
+legend('x','y','z');
+
+figure(figct); figct = figct + 1;
+plot(t_data, ac_all);
+legend('x','y','z');
