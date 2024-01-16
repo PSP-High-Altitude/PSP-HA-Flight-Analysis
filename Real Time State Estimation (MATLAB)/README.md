@@ -1,4 +1,5 @@
-The goal of this project is to make an object-oriented approach to making a state estimation algorithim
+The goal of this project is to make an object-oriented approach to making a state estimation algorithim \\
+Confluence Page here: https://purdue-space-program.atlassian.net/wiki/spaces/HA/pages/488605818/Real+Time+Estimation
 
 # SUMMARY OF CLASSES
 ## TEST CLASSES
