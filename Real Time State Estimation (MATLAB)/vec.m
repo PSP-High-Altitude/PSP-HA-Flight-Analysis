@@ -9,6 +9,9 @@ classdef vec
     end
 
     methods(Static)
+        function v_out = zero()
+            v_out = vec(0,0,0);
+        end
         function v_out = add(v1, v2)
             v_out = vec( ...
             v1.x + v2.x, ...
@@ -24,18 +27,21 @@ classdef vec
         end
 
         function v_out = scale(v, c)
-            v_out = quat( ...
+            v_out = vec( ...
                 v.x * c, ...
                 v.y * c, ...
                 v.z * c);
         end
 
-        function v_out = fromQuat(q)
-            v_out = vec(q.x, q.y, q.z);
+        function v_out = dot(v1, v2)
+            v_out = vec( ...
+                v1.x * v2.x, ...
+                v1.y * v2.y, ...
+                v1.z * v2.z);
         end
 
-        function v_out = zero()
-            v_out = vec(0,0,0);
+        function v_out = fromQuat(q)
+            v_out = vec(q.x, q.y, q.z);
         end
     end
     
@@ -70,6 +76,13 @@ classdef vec
             obj.z = obj.z * c;
         end
 
+        function v_out = idot(obj, v)
+            v_out = vec( ...
+                obj.x * v.x, ...
+                obj.y * v.y, ...
+                obj.z * v.z);
+        end
+
         function q_out = toQuat(obj)
             q_out = quat(0, obj.x, obj.y, obj.z);
         end
@@ -86,7 +99,11 @@ classdef vec
 
         function obj = qrot(obj, q)
             q_out = quat.mult(quat.mult(q,obj.toQuat), q.conj());
-            obj = fromQuat(q_out);
+            obj = vec.fromQuat(q_out);
+        end
+
+        function v_out = copy(obj)
+            v_out = vec(obj.x, obj.y, obj.z);
         end
     end
 end
