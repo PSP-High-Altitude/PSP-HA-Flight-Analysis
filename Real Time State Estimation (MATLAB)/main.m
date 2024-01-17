@@ -34,13 +34,21 @@ pal = flightAlg_v1(samples); % Full flight program
 gps = readGpsStates("dm3_PAL_gpa.csv", 217); % gps state, used as reference/"true" state
 baro2 = baro_est(samples, 15e3, 10);
 
+% Initialize state estimator
+estim = estimator(vec(0, pi/2, 0), 30e-3, state_history(iMax - iMin));
+estim_out = [];
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% LOOP
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 i = iMin;
+<<<<<<< Updated upstream
 j = jMin;
 
+=======
+fprintf('Running from %d to %d (%d samples):\n', iMin, iMax, iMax-iMin+1);
+>>>>>>> Stashed changes
 while (i <= iMax)
     % Get next data sample
     sample = PALDataSample(dataStream.Timestamp(i), ...
@@ -59,8 +67,13 @@ while (i <= iMax)
     pal = pal.update(sample);
     baro2 = baro2.update(sample, false); % without temp
 
+    estim = estim.update_from_sample(sample, i-iMin+1);
+
     % increment i
     i = i + 1;
+    if (mod(i-iMin+1,1000) == 0)
+        fprintf("Sample %d complete.\n", i-iMin+1);
+    end
 end
 
 %% POST PROCESS / GRAPHS
@@ -70,6 +83,8 @@ pal.makegraphs(2, tMin)
 state_history.compareGraphs(4, gps, pal, tMin)
 state_history.compareGraphs(5, gps, baro2, tMin)
 state_history.compareGraphs(6, gps, [baro2.hist(), pal.hist()], tMin)
+
+estim.state_hist.makegraphs(1, tMin+1);
 
 disp("done")
 
