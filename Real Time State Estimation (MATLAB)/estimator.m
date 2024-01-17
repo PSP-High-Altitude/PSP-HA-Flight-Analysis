@@ -41,7 +41,7 @@ classdef estimator
 
         function obj = update_state(obj, w, a, i)
             obj.state.w = w;
-            obj.state.q.step(w, obj.dt);
+            obj.state.q = obj.state.q.step(w, obj.dt);
             obj.state.a = a.qrot(obj.state.q);
             obj.state.v = obj.state.v.iadd(vec.scale(obj.state.a, obj.dt));
             obj.state.d = obj.state.d.iadd(vec.scale(obj.state.v, obj.dt));
@@ -52,8 +52,8 @@ classdef estimator
         function obj = update_from_sample(obj, sample, i)
             w_vec = vec(sample.rx, sample.ry, sample.rz);
             a_vec = vec(sample.ax, sample.ay, sample.az);
-            w_vec.iscale(pi/180);
-            a_vec.iscale(9.81);
+            w_vec = w_vec.iscale(pi/180);
+            a_vec = a_vec.iscale(9.81);
             obj = obj.update_state(w_vec, a_vec, i);
         end
     end

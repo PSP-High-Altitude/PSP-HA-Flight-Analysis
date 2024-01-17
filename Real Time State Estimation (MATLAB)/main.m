@@ -43,12 +43,8 @@ estim_out = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 i = iMin;
-<<<<<<< Updated upstream
 j = jMin;
-
-=======
 fprintf('Running from %d to %d (%d samples):\n', iMin, iMax, iMax-iMin+1);
->>>>>>> Stashed changes
 while (i <= iMax)
     % Get next data sample
     sample = PALDataSample(dataStream.Timestamp(i), ...
