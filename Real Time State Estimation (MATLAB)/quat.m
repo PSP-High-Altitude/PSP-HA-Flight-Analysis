@@ -142,8 +142,8 @@ classdef quat
         function eul_v = eul(obj)
             y1 = 2 * (obj.w * obj.z + obj.x * obj.y);
             y2 = 1 - 2 * (obj.y * obj.y + obj.z * obj.z);
-            p1 = sqrt(1 + 2 * (obj.w * obj.y - obj.x * obj.z));
-            p2 = sqrt(1 - 2 * (obj.w * obj.y - obj.x * obj.z));
+            p1 = sqrt(1 + 2 * (obj.w * obj.y - obj.x * obj.z))
+            p2 = sqrt(1 - 2 * (obj.w * obj.y - obj.x * obj.z))
             r1 = 2 * (obj.w * obj.x + obj.y * obj.z);
             r2 = 1 - 2 * (obj.x * obj.x + obj.y * obj.y);
             eul_v = vec( ...
@@ -155,7 +155,7 @@ classdef quat
 
         function obj = step(obj, w, dt)
             obj = obj.iadd(quat.scale(quat.mult(obj, w.toQuat()),.5*dt));
-            obj.normalize();
+            obj = obj.normalize();
         end
 
         function q_out = copy(obj)

@@ -35,7 +35,7 @@ gps = readGpsStates("dm3_PAL_gpa.csv", 217); % gps state, used as reference/"tru
 baro2 = baro_est(samples, 15e3, 10);
 
 % Initialize state estimator
-estim = estimator(vec(0, pi/2, 0), 30e-3, state_history(iMax - iMin));
+estim = estimator(vec(pi/2, 0, 0), 30e-3, state_history(iMax - iMin));
 estim_out = [];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -73,12 +73,12 @@ while (i <= iMax)
 end
 
 %% POST PROCESS / GRAPHS
-est1.makegraphs(1, tMin)
-pal.makegraphs(2, tMin)
+% est1.makegraphs(1, tMin)
+% pal.makegraphs(2, tMin)
 % gps.makegraphs(3)
-state_history.compareGraphs(4, gps, pal, tMin)
-state_history.compareGraphs(5, gps, baro2, tMin)
-state_history.compareGraphs(6, gps, [baro2.hist(), pal.hist()], tMin)
+% state_history.compareGraphs(4, gps, pal, tMin)
+% state_history.compareGraphs(5, gps, baro2, tMin)
+% state_history.compareGraphs(6, gps, [baro2.hist(), pal.hist()], tMin)
 
 estim.state_hist.makegraphs(1, tMin+1);
 

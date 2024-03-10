@@ -45,7 +45,7 @@ classdef estimator
             obj.state.a = a.qrot(obj.state.q);
             obj.state.v = obj.state.v.iadd(vec.scale(obj.state.a, obj.dt));
             obj.state.d = obj.state.d.iadd(vec.scale(obj.state.v, obj.dt));
-            obj.state.eul = obj.state.q.eul();
+%             obj.state.eul = obj.state.q.eul();
             obj = obj.update_history(i);
         end
 

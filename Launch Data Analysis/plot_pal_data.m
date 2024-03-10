@@ -20,7 +20,7 @@ fin_steps = 5;
 
 t_factor = 1;
 height_ratio = 40/293; % Ratio of (board distance from top) / (total rocket height)
-filename = 'dm3.gif';
+filename = 'sk0.gif';
 
 % Obtained from https://gml.noaa.gov/grad/solcalc/azel.html
 az = 302.04;
@@ -136,10 +136,10 @@ tdiff(end+1) = tdiff(end);
 % close all;
 for i=1:max(size(t_quats))
 %     t(i) = timer('TimerFcn',@(~,~)animFUNC(tf, transforms(:,:,i), filename, i, tdiff(i)), 'StartDelay',0);
-    t(i) = timer('TimerFcn',@(~,~)animFUNC(tf, transforms(:,:,i), filename, i, tdiff(i), 0), 'StartDelay',t_data(i)/t_factor);
+    t(i) = timer('TimerFcn',@(~,~)animFUNC(tf, transforms(:,:,i), filename, i, tdiff(i), 1), 'StartDelay',t_data(i)/t_factor);
 
 end
 start(t);
 pause(t_data(end)/t_factor)
-% pause(10*60)
+pause(10*60)
 delete(t);
